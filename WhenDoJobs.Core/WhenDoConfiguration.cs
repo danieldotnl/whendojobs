@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core
 {
-    public class WhenDoOptions
+    public class WhenDoConfiguration
     {
         internal Func<IServiceProvider, IQueueProvider> QueueFactory;
 

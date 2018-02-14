@@ -8,5 +8,6 @@ namespace WhenDoJobsApp.Messages
     public class TemperatureMessage : IMessageContext
     {
         public double Temperature { get; set; }
+        public string Area { get; set; }
     }
 }

@@ -10,7 +10,8 @@ using WhenDoJobsApp.Messages;
 using WhenDoJobs.Core.Models;
 using WhenDoJobs.Core;
 using WhenDoJobs.Core.Interfaces;
-using WhenDoJobs.InMemoryQueueProvider;
+using WhenDoJobs.Core.Commands;
+using WhenDoJobs.Core.Services;
 
 namespace WhenDoJobsApp
 {
@@ -29,16 +30,17 @@ namespace WhenDoJobsApp
             var path = @"C:\temp\sample-conf.json";
             var newjob = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(path));
 
-            var handler = serviceProvider.GetRequiredService<WhenDoEngine>();
-            handler.RegisterJob(newjob);
+            var engine = serviceProvider.GetRequiredService<IWhenDoEngine>();
+            engine.RegisterJob(newjob);
+            engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
 
             var ct = new CancellationToken();
-            Task.Run(async () => await handler.RunAsync(ct));
+            Task.Run(async () => await engine.RunAsync(ct));
 
             var queue = serviceProvider.GetRequiredService<IQueueProvider>();
 
             Console.ReadLine();
-            queue.EnqueueMessage(new TemperatureMessage() { Temperature = 20.0D });
+            queue.EnqueueMessage(new TemperatureMessage() { Temperature = 19.5D, Area = "Livingroom" });
 
             Console.ReadLine();
         }
@@ -48,7 +50,7 @@ namespace WhenDoJobsApp
             IServiceCollection services = new ServiceCollection();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
             services.AddSingleton<IQueueProvider, InMemoryQueueProvider>();
-            services.AddWhenDoJob(x => x.UseInMemoryQueue()); //TODO: register in here the service providers           
+            services.AddWhenDoJob(); //TODO: register in here the service providers           
 
             return services.BuildServiceProvider();
         }

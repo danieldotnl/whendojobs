@@ -6,15 +6,12 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Models
 {
-    public class CommandDefinition : ICommandDefinition
+    public class CommandDefinition
     {
+        public string Type { get; set; }
+        public string Command { get; set; }
         [JsonExtensionData]
-        public Dictionary<string, object> Command { get; set; }
-        public ExecutionStrategy Execution { get; set; }
-
-        public ICommand Build()
-        {
-            throw new NotImplementedException();
-        }
+        public Dictionary<string, object> Parameters { get; set; }
+        public ExecutionStrategyDefinition Execution { get; set; } = new ExecutionStrategyDefinition();
     }
 }

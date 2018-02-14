@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Text;
+using WhenDoJobs.Core.Interfaces;
+using WhenDoJobs.Core.Models;
 
 namespace WhenDoJobs.Core
 {

@@ -4,5 +4,5 @@ using System.Text;
 
 namespace WhenDoJobs.Core
 {
-    public enum ExecutionMode { Reliable, Delayed, Scheduled };
+    public enum ExecutionMode { Default, Reliable, Delayed, Scheduled };
 }

@@ -20,17 +20,22 @@ namespace WhenDoJobs.Core
         private IQueueProvider persistence;
         private ILogger<WhenDoEngine> logger;
         private IServiceProvider serviceProvider;
-        private List<IJob> jobs = new List<IJob>();
+        private IDateTimeProvider dateTimeProvider;
+        private IWhenDoRegistry registry;
 
-        public WhenDoEngine(IQueueProvider persistence, IServiceProvider serviceProvider, ILogger<WhenDoEngine> logger)
+        public WhenDoEngine(IQueueProvider persistence, IServiceProvider serviceProvider, 
+            ILogger<WhenDoEngine> logger, IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry)
         {
             this.persistence = persistence;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
+            this.dateTimeProvider = dateTimeProvider;
+            this.registry = registry;
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
+            registry.BuildServiceProvider();
             logger.LogInformation("Start listing to queue");
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -46,37 +51,33 @@ namespace WhenDoJobs.Core
 
         public async Task HandleMessage(IMessageContext message)
         {
-            var executableJobs = jobs.Where(x => x.Evaluate(message) && x.IsRunnable());
-
             try
             {
+                var executableJobs = registry.Jobs.Where(x => x.Evaluate(message) && x.IsRunnable(dateTimeProvider));
+
                 var tasks = new List<Task>();
                 foreach (var job in executableJobs)
                 {
-                    var jobExecutor = serviceProvider.GetRequiredService<IJobExecutor>();
-                    var result = jobExecutor.ExecuteAsync(job);
+                    var executor = serviceProvider.GetRequiredService<IWhenDoExecutor>();
+                    var result = executor.ExecuteJobAsync(job);
                     tasks.Add(result);
                 }
                 await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
-                logger.LogError("Error processing queue message", ex, message);
+                logger.LogError("Error processing queue message: {error}", ex, message);
             }
         }
-
-        public void RegisterJob(JobDefinition template)
+  
+        public void RegisterJob(JobDefinition jobDefinition)
         {
-            var mi = this.GetType().GetMethod("RegisterJobDefinition", new Type[] { typeof(JobDefinition) });
-            var type = Type.GetType($"WhenDoJobsApp.Messages.{template.Context}, WhenDoJobsApp"); //TODO: make generic
-            var fooRef = mi.MakeGenericMethod(type);
-            fooRef.Invoke(this, new object[] { template });            
+            registry.RegisterJob(jobDefinition.ToJob());
         }
 
-        public void RegisterJobDefinition<T>(JobDefinition jobDefinition) where T: IMessageContext
+        public void RegisterCommandHandler<T>(string type) where T : class, ICommandHandler
         {
-            var job = jobDefinition.ToJob<T>(serviceProvider.GetRequiredService<IJob>());
-            jobs.Add(job);
-        }       
+            registry.RegisterCommandHandler<T>(type);
+        }
     }
 }

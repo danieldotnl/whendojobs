@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WhenDoJobs.Core\WhenDoJobs.Core.csproj" />
-    <ProjectReference Include="..\WhenDoJobs.InMemoryQueueProvider\WhenDoJobs.InMemoryQueueProvider.csproj" />
   </ItemGroup>
 
 </Project>

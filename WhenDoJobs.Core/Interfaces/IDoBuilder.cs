@@ -12,13 +12,13 @@ namespace WhenDoJobs.Core.Interfaces
 
     public interface IPhilipsHueCommand
     {
-        ICommand On(string area);
-        ICommand Off(string area);
-        ICommand SwitchOnScene(string scene);
+        ICommandHandler On(string area);
+        ICommandHandler Off(string area);
+        ICommandHandler SwitchOnScene(string scene);
     }
 
     public interface IHeatingCommand
     {
-        ICommand SetTemperature(double temp);
+        ICommandHandler SetTemperature(double temp);
     }
 }

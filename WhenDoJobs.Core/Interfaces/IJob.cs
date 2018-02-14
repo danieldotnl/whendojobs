@@ -12,9 +12,9 @@ namespace WhenDoJobs.Core.Interfaces
         TimeSpan? DisabledTill { get; set; }
         bool Disabled { get; set; }
         Delegate Condition { get; set; }
-        IEnumerable<CommandDefinition> CommandDefinitions { get; set; }
+        IEnumerable<ICommand> Commands { get; set; }
 
         bool Evaluate(IMessageContext context);
-        bool IsRunnable();
+        bool IsRunnable(IDateTimeProvider dateTimeProvider);
     }
 }

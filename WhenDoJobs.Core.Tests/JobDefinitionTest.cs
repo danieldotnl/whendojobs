@@ -1,13 +1,15 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace WhenDoJobs.Core.Tests
 {
     [TestClass]
-    public class UnitTest1
+    public class JobDefinitionTest
     {
         [TestMethod]
-        public void TestMethod1()
+        public async Task ConvertJobDefinitionFromJsonAsync()
         {
+
         }
     }
 }
