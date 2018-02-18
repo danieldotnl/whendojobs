@@ -49,8 +49,7 @@ namespace WhenDoJobsApp
         {
             IServiceCollection services = new ServiceCollection();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
-            services.AddSingleton<IQueueProvider, InMemoryQueueProvider>();
-            services.AddWhenDoJob(); //TODO: register in here the service providers           
+            services.AddWhenDoJob();       
 
             return services.BuildServiceProvider();
         }

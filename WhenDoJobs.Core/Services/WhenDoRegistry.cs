@@ -13,7 +13,7 @@ namespace WhenDoJobs.Core.Services
         private IServiceCollection services;
         private IServiceProvider provider;
         private Dictionary<string, Type> commands = new Dictionary<string, Type>();
-        public List<IJob> Jobs { get; set; } = new List<IJob>();
+        public List<IWhenDoJob> Jobs { get; set; } = new List<IWhenDoJob>();
 
         public WhenDoRegistry(IServiceCollection services, IServiceProvider serviceProvider)
         {
@@ -26,21 +26,24 @@ namespace WhenDoJobs.Core.Services
             provider = services.BuildServiceProvider();
         }
 
-        public ICommandHandler GetCommandHandler(string type)
+        public IWhenDoCommandHandler GetCommandHandler(string type)
         {
-            var cmd = commands[type];
-            if (cmd == null)
+            if (commands.ContainsKey(type))
+            {
+                var cmd = commands[type];
+                return (IWhenDoCommandHandler)provider.GetRequiredService(cmd);
+            }
+            else
                 throw new CommandHandlerNotRegisteredException("No such command handler has been registered", type);
-            return (ICommandHandler) provider.GetRequiredService(cmd);
         }
 
-        public void RegisterCommandHandler<TCommand>(string type) where TCommand : class, ICommandHandler
+        public void RegisterCommandHandler<TCommand>(string type) where TCommand : class, IWhenDoCommandHandler
         {
             services.AddTransient<TCommand>();
             commands.Add(type, typeof(TCommand));
         }
 
-        public void RegisterJob(IJob job)
+        public void RegisterJob(IWhenDoJob job)
         {
             this.Jobs.Add(job);
         }

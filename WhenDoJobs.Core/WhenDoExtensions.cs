@@ -10,15 +10,15 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static IJob ToJob(this JobDefinition definition)
+        public static IWhenDoJob ToJob(this JobDefinition definition)
         {
             var mi = typeof(WhenDoExtensions).GetMethod("ToJob", true);
             var type = Type.GetType($"WhenDoJobsApp.Messages.{definition.Context}, WhenDoJobsApp"); //TODO: make generic
             var method = mi.MakeGenericMethod(type);
-            return (IJob) method.Invoke(typeof(WhenDoExtensions), new object[] { definition });
+            return (IWhenDoJob) method.Invoke(typeof(WhenDoExtensions), new object[] { definition });
         }
 
-        public static IJob ToJob<TContext>(this JobDefinition definition) where TContext : IMessageContext
+        public static IWhenDoJob ToJob<TContext>(this JobDefinition definition) where TContext : IMessageContext
         {
             var job = new Job<TContext>()
             {
@@ -48,7 +48,7 @@ namespace WhenDoJobs.Core
                 .FirstOrDefault(method => method.Name == name & method.IsGenericMethod == generic);
         }
 
-        public static ICommand ToCommand(this CommandDefinition definition)
+        public static IWhenDoCommand ToCommand(this CommandDefinition definition)
         {
             var command = new Command()
             {

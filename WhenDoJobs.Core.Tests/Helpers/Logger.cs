@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace WhenDoJobs.Core.Tests
+namespace WhenDoJobs.Core.Tests.Helpers
 {
     public class Logger<T> : ILogger<T>
     {

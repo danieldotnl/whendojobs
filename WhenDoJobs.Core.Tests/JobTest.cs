@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Models;
+using WhenDoJobs.Core.Tests.Helpers;
 
 namespace WhenDoJobs.Core.Tests
 {

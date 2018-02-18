@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface ICommandHandler
+    public interface IWhenDoCommandExecutor
     {
-
+        Task ExecuteAsync(string type, string methodName, Dictionary<string, object> parameters);
     }
 }

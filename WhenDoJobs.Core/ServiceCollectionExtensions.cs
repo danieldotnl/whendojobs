@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Hangfire;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,8 @@ namespace WhenDoJobs.Core
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddWhenDoJob(this IServiceCollection services)
-        {
-            services.AddWhenDoJob(config => config.UseInMemoryQueue());
-        }
-
-        public static void AddWhenDoJob(this IServiceCollection services, Action<WhenDoConfiguration> setupAction)
+        
+        public static void AddWhenDoJob(this IServiceCollection services, Action<WhenDoConfiguration> setupAction = null)
         {
             if (services.Any(x => x.ServiceType == typeof(WhenDoConfiguration)))
                 throw new InvalidOperationException("WhenDoJob services already registered");
@@ -26,10 +23,17 @@ namespace WhenDoJobs.Core
 
             services.AddSingleton<IServiceCollection>(services);
 
+            services.AddTransient<JobStorage>(config.HangfireStorageFactory);
+            services.AddSingleton<WhenDoConfiguration>(config);
+            services.AddSingleton<IQueueProvider>(config.QueueFactory);
+            services.AddTransient<IBackgroundJobClient, BackgroundJobClient>();
             services.AddSingleton<IWhenDoEngine, WhenDoEngine>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-            services.AddTransient<IWhenDoExecutor, WhenDoExecutor>();
+            services.AddTransient<IWhenDoJobExecutor, WhenDoJobExecutor>();
+            services.AddTransient<IWhenDoCommandExecutor, WhenDoCommandExecutor>();
             services.AddSingleton<IWhenDoRegistry, WhenDoRegistry>();
+
+            //JobStorage.Current = config.HangfireStorageFactory()
 
             //register default handlers
             //var provider = services.BuildServiceProvider();

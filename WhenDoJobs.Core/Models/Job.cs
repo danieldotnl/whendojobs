@@ -4,7 +4,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Models
 {
-    public class Job<TContext> : IJob where TContext : IMessageContext
+    public class Job<TContext> : IWhenDoJob where TContext : IMessageContext
     {
         public string Id { get; set; }
         public int Version { get; set; }
@@ -12,7 +12,7 @@ namespace WhenDoJobs.Core.Models
         public TimeSpan? DisabledFrom { get; set; }
         public TimeSpan? DisabledTill { get; set; }
         public Delegate Condition { get; set; }
-        public IEnumerable<ICommand> Commands { get; set; }
+        public IEnumerable<IWhenDoCommand> Commands { get; set; }
 
         public bool IsRunnable(IDateTimeProvider dtp)
         {

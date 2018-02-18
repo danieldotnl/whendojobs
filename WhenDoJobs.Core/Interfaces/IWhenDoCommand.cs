@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Models;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface ICommand
+    public interface IWhenDoCommand
     {
         string Type { get; set; }
         string MethodName { get; set; }

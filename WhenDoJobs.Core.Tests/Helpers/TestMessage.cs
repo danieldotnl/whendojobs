@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using WhenDoJobs.Core.Interfaces;
 
-namespace WhenDoJobs.Core.Tests
+namespace WhenDoJobs.Core.Tests.Helpers
 {
     public class TestMessage : IMessageContext
     {

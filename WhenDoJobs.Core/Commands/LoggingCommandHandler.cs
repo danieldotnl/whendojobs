@@ -22,6 +22,12 @@ namespace WhenDoJobs.Core.Commands
             return Task.CompletedTask;
         }
 
+        public Task LogWarning(string text)
+        {
+            logger.LogWarning(text);
+            return Task.CompletedTask;
+        }
+
         public Task LogDebug(string text)
         {
             logger.LogDebug(text);

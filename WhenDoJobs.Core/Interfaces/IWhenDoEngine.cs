@@ -14,6 +14,6 @@ namespace WhenDoJobs.Core.Interfaces
 
         void RegisterJob(JobDefinition template);
         void RegisterCommandHandler<T>(string type)
-            where T : class, ICommandHandler;
+            where T : class, IWhenDoCommandHandler;
     }
 }
