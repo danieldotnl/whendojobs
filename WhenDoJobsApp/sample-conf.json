@@ -1,0 +1,46 @@
+{
+	"id": "TemperatureBetween15and20",
+	"version": 1,
+	"disabledFrom": "20:55:00",
+	"disabledTill": "21:00:00",
+	"disabled": false,
+	"context": "TemperatureMessage",
+	"when": "TemperatureMessage.Area = \"Livingroom\" AND TemperatureMessage.Temperature > 15.0 AND TemperatureMessage.Temperature < 20.0",
+	"do": [{
+		"type": "Logging",
+		"command": "LogError",
+		"text": "Dit is een gewone test"
+	},
+	{
+		"type": "PhilipsHue",
+		"command": "scene",
+		"id": "OHC Sunset",
+		"area": "living room"
+	},
+	{
+		"type": "Logging",
+		"command": "LogError",
+		"text": "Dit is een delayed test",
+		"execution": {
+			"mode": "delayed",
+			"time": "00:10"
+		}
+	},
+	{
+		"type": "Logging",
+		"command": "LogError",
+		"text": "Dit is een scheduled test",
+		"execution": {
+			"mode": "scheduled",
+			"time": "20:00"
+		}
+	},
+	{
+		"type": "Logging",
+		"command": "LogError",
+		"text": "Dit is een reliable test",
+		"execution": {
+			"mode": "reliable"
+		}
+	}]
+}

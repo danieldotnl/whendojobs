@@ -63,13 +63,31 @@ namespace WhenDoJobs.Core.Tests
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
             commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Returns(Task.CompletedTask);
 
-            //var cmdexecutor = new WhenDoCommandExecutor(MockHelper.CreateRegistryMock(handlerMock.Object).Object, MockHelper.CreateLogger<WhenDoCommandExecutor>());
             IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
 
             await executor.ExecuteAsync(job);
 
             commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(2));
-        }        
+        } 
+        
+        [TestMethod]
+        public async Task ExecutionShouldContinueAfterInvalidCommands()
+        {
+            var job = CreateJobWithInvalidCommands();
+            Assert.IsTrue(job.Evaluate(new TestMessage()));
+
+            var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
+            var hangfireMock = new Mock<IBackgroundJobClient>();
+
+            var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
+            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Throws(new Exception());
+
+            IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
+
+            await executor.ExecuteAsync(job);
+
+            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(4));
+        }
 
         private IWhenDoJob CreateJob()
         {
@@ -95,19 +113,40 @@ namespace WhenDoJobs.Core.Tests
             return job;
         }
 
-        private IWhenDoJob CreateJobWithInvalidCommand()
+        private IWhenDoJob CreateJobWithInvalidCommands()
         {
             var job = new Job<TestMessage>();
             job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
 
             var command1 = new Command()
             {
-                Type = "Logging",
-                MethodName = "LogError"
+                Type = "BlaBla", //handler doesn't exist
+                MethodName = "LogError", 
+                Parameters = new Dictionary<string, object>() { { "text", "unit test command 1" } }
             };
-            command1.Parameters.Add("texxt", "unit test command 1"); //texxt is invalid
 
-            job.Commands = new List<IWhenDoCommand>() { command1};
+            var command2 = new Command()
+            {
+                Type = "Logging",
+                MethodName = "LogErrors", //method doesn't exist
+                Parameters = new Dictionary<string, object>() { { "text", "unit test command 1" } }
+            };
+
+            var command3 = new Command()
+            {
+                Type = "Logging",
+                MethodName = "LogError", 
+                Parameters = new Dictionary<string, object>() { { "blabla", "unit test command 1" } } //parameter doesn't exist
+            };
+
+            var command4 = new Command()
+            {
+                Type = "Logging",
+                MethodName = "LogError",
+                Parameters = new Dictionary<string, object>() { { "text", "This should be normally logged" } } //parameter doesn't exist
+            };
+
+            job.Commands = new List<IWhenDoCommand>() { command1, command2, command3, command4};
 
             return job;
         }

@@ -27,7 +27,7 @@ namespace WhenDoJobsApp
 
             IServiceProvider serviceProvider = ConfigureServices();
 
-            var path = @"C:\temp\sample-conf.json";
+            var path = @".\sample-conf.json";
             var newjob = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(path));
 
             var engine = serviceProvider.GetRequiredService<IWhenDoEngine>();
