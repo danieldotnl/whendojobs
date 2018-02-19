@@ -21,9 +21,18 @@ namespace WhenDoJobs.Core.Tests
         {
             var handlerMock = new Mock<ILoggingCommandHandler>();
             var executor = new WhenDoCommandExecutor(MockHelper.CreateRegistryMock(handlerMock.Object).Object, MockHelper.CreateLogger<WhenDoCommandExecutor>());
-            
-            await Assert.ThrowsExceptionAsync<InvalidCommandException>(async () => 
+
+            await Assert.ThrowsExceptionAsync<InvalidCommandException>(async () =>
                         await executor.ExecuteAsync("Logging", "LogError", new Dictionary<string, object>() { { "texxxt", "unit test command 1" } }));
+
+            await Assert.ThrowsExceptionAsync<InvalidCommandException>(async () =>
+                        await executor.ExecuteAsync("Logging", "LogError",
+                            new Dictionary<string, object>()
+                                {
+                                    { "text", "unit test command 1" },
+                                    {"bla", "another parameter" }
+                                }
+                            ));
         }
     }
 }

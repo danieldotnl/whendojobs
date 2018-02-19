@@ -25,7 +25,13 @@ namespace WhenDoJobs.Core.Services
             var commandHandler = registry.GetCommandHandler(type);
             try
             {
-                var method = commandHandler.GetType().GetMethod(methodName);
+                var method = commandHandler.GetType().GetMethods()
+                    .Where(m => m.Name.Equals(methodName))
+                    .Where(n => n.GetParameters().Count() == parameters.Count)
+                    .FirstOrDefault();
+
+                if (method == null)
+                    throw new InvalidCommandException($"Could not find method {methodName} in type {type} with {parameters.Count} parameters", parameters.Keys);
                 var methodParams = method.GetParameters().ToList();
 
                 var invocationParams = new List<object>();
@@ -36,7 +42,7 @@ namespace WhenDoJobs.Core.Services
             }
             catch (KeyNotFoundException ex)
             {
-                throw new InvalidCommandException($"Invalid command, could not find required parameters", parameters.Keys, ex);
+                throw new InvalidCommandException("Invalid command, could not find required parameters", parameters.Keys, ex);
             }
         }
     }
