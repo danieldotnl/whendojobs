@@ -100,5 +100,10 @@ namespace WhenDoJobs.Core
         {
             registry.RegisterCommandHandler<T>(type);
         }
+
+        public void ClearJobRegister()
+        {
+            registry.ClearJobRegister();
+        }
     }
 }

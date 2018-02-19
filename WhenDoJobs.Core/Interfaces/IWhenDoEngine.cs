@@ -12,6 +12,7 @@ namespace WhenDoJobs.Core.Interfaces
         Task RunAsync(CancellationToken cancellationToken);
         Task HandleMessage(IMessageContext message);
 
+        void ClearJobRegister();
         void RegisterJob(JobDefinition template);
         void RegisterCommandHandler<T>(string type)
             where T : class, IWhenDoCommandHandler;

@@ -13,7 +13,9 @@ namespace WhenDoJobs.Core.Services
         private IServiceCollection services;
         private IServiceProvider provider;
         private Dictionary<string, Type> commands = new Dictionary<string, Type>();
-        public List<IWhenDoJob> Jobs { get; set; } = new List<IWhenDoJob>();
+        private List<IWhenDoJob> jobs = new List<IWhenDoJob>();
+
+        public IEnumerable<IWhenDoJob> Jobs { get { return jobs; } }
 
         public WhenDoRegistry(IServiceCollection services, IServiceProvider serviceProvider)
         {
@@ -45,7 +47,12 @@ namespace WhenDoJobs.Core.Services
 
         public void RegisterJob(IWhenDoJob job)
         {
-            this.Jobs.Add(job);
+            jobs.Add(job);
+        }
+
+        public void ClearJobRegister()
+        {
+            jobs.Clear();
         }
 
     }
