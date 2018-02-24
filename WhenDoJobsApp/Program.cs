@@ -10,7 +10,6 @@ using WhenDoJobsApp.Messages;
 using WhenDoJobs.Core.Models;
 using WhenDoJobs.Core;
 using WhenDoJobs.Core.Interfaces;
-using WhenDoJobs.Core.Commands;
 using WhenDoJobs.Core.Services;
 
 namespace WhenDoJobsApp
@@ -37,7 +36,7 @@ namespace WhenDoJobsApp
             var ct = new CancellationToken();
             Task.Run(async () => await engine.RunAsync(ct));
 
-            var queue = serviceProvider.GetRequiredService<IQueueProvider>();
+            var queue = serviceProvider.GetRequiredService<IWhenDoQueueProvider>();
 
             Console.ReadLine();
             queue.EnqueueMessage(new TemperatureMessage() { Temperature = 19.5D, Area = "Livingroom" });

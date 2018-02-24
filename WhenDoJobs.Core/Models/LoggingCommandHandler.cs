@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WhenDoJobs.Core.Interfaces;
 
-namespace WhenDoJobs.Core.Commands
+namespace WhenDoJobs.Core.Models
 {
     public class LoggingCommandHandler : ILoggingCommandHandler
     {
@@ -16,37 +16,37 @@ namespace WhenDoJobs.Core.Commands
             this.logger = logger;
         }
 
-        public Task LogError(string text)
+        public Task LogErrorAsync(string text)
         {
             logger.LogError(text);
             return Task.CompletedTask;
         }
 
-        public Task LogWarning(string text)
+        public Task LogWarningAsync(string text)
         {
             logger.LogWarning(text);
             return Task.CompletedTask;
         }
 
-        public Task LogDebug(string text)
+        public Task LogDebugAsync(string text)
         {
             logger.LogDebug(text);
             return Task.CompletedTask;
         }
 
-        public Task LogInformation(string text)
+        public Task LogInformationAsync(string text)
         {
             logger.LogInformation(text);
             return Task.CompletedTask;
         }
 
-        public Task LogTrace(string text)
+        public Task LogTraceAsync(string text)
         {
             logger.LogTrace(text);
             return Task.CompletedTask;
         }
 
-        public Task LogCritical(string text)
+        public Task LogCriticalAsync(string text)
         {
             logger.LogCritical(text);
             return Task.CompletedTask;

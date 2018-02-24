@@ -14,7 +14,7 @@ namespace WhenDoJobs.Core.Interfaces
         Delegate Condition { get; set; }
         IEnumerable<IWhenDoCommand> Commands { get; set; }
 
-        bool Evaluate(IMessageContext context);
+        bool Evaluate(IWhenDoMessageContext context);
         bool IsRunnable(IDateTimeProvider dateTimeProvider);
     }
 }

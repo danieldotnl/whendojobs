@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    interface IInMemoryQueueProvider : IQueueProvider
+    interface IInMemoryQueueProvider : IWhenDoQueueProvider
     {
              
     }

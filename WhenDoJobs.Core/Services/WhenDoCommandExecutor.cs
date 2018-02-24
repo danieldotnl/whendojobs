@@ -25,6 +25,8 @@ namespace WhenDoJobs.Core.Services
             var commandHandler = registry.GetCommandHandler(type);
             try
             {
+                if (!methodName.EndsWith("Async"))
+                    methodName = methodName + "Async";
                 var method = commandHandler.GetType().GetMethods()
                     .Where(m => m.Name.Equals(methodName))
                     .Where(n => n.GetParameters().Count() == parameters.Count)

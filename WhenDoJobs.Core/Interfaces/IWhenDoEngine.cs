@@ -10,7 +10,7 @@ namespace WhenDoJobs.Core.Interfaces
     public interface IWhenDoEngine
     {
         Task RunAsync(CancellationToken cancellationToken);
-        Task HandleMessage(IMessageContext message);
+        Task HandleMessage(IWhenDoMessageContext message);
 
         void ClearJobRegister();
         void RegisterJob(JobDefinition template);

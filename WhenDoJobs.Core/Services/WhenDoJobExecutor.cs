@@ -51,7 +51,7 @@ namespace WhenDoJobs.Core.Services
                 }
                 catch(Exception ex)
                 {
-                    logger.LogError($"Error when executing command {command.Type}", ex);
+                    logger.LogError(ex, $"Error when executing command {command.Type}: {ex.Message}");
                 }
             }
         }

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Threading.Tasks;
-using WhenDoJobs.Core.Commands;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Models;
 using WhenDoJobs.Core.Services;
@@ -57,8 +56,8 @@ namespace WhenDoJobs.Core.Tests
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
             var handlerMock = new Mock<ILoggingCommandHandler>();
-            handlerMock.Setup(x => x.LogError(It.IsAny<string>()));
-            handlerMock.Setup(x => x.LogWarning(It.IsAny<string>()));
+            handlerMock.Setup(x => x.LogErrorAsync(It.IsAny<string>()));
+            handlerMock.Setup(x => x.LogWarningAsync(It.IsAny<string>()));
 
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
             commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Returns(Task.CompletedTask);

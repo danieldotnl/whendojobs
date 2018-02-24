@@ -4,7 +4,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Models
 {
-    public class Job<TContext> : IWhenDoJob where TContext : IMessageContext
+    public class Job<TContext> : IWhenDoJob where TContext : IWhenDoMessageContext
     {
         public string Id { get; set; }
         public int Version { get; set; }
@@ -26,7 +26,7 @@ namespace WhenDoJobs.Core.Models
             return true;
         }
 
-        public bool Evaluate(IMessageContext context)
+        public bool Evaluate(IWhenDoMessageContext context)
         {
             var result = (bool)Condition.DynamicInvoke(context);
             return result;

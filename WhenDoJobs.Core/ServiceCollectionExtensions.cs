@@ -25,7 +25,7 @@ namespace WhenDoJobs.Core
 
             services.AddTransient<JobStorage>(config.HangfireStorageFactory);
             services.AddSingleton<WhenDoConfiguration>(config);
-            services.AddSingleton<IQueueProvider>(config.QueueFactory);
+            services.AddSingleton<IWhenDoQueueProvider>(config.QueueFactory);
             services.AddTransient<IBackgroundJobClient, BackgroundJobClient>();
             services.AddSingleton<IWhenDoEngine, WhenDoEngine>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();

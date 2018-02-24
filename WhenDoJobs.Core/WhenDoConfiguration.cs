@@ -10,14 +10,14 @@ namespace WhenDoJobs.Core
 {
     public class WhenDoConfiguration
     {
-        internal Func<IServiceProvider, IQueueProvider> QueueFactory;
+        internal Func<IServiceProvider, IWhenDoQueueProvider> QueueFactory;
         internal Func<IServiceProvider, JobStorage> HangfireStorageFactory;
         internal bool ExternalHangfireServer = false;
 
 
         public WhenDoConfiguration()
         {
-            QueueFactory = new Func<IServiceProvider, IQueueProvider>(sp => new InMemoryQueueProvider());
+            QueueFactory = new Func<IServiceProvider, IWhenDoQueueProvider>(sp => new InMemoryQueueProvider());
             HangfireStorageFactory = new Func<IServiceProvider, JobStorage>(sp => new MemoryStorage());
         }
 
@@ -31,9 +31,11 @@ namespace WhenDoJobs.Core
             ExternalHangfireServer = true;
         }
 
-        public void UseQueue(Func<IServiceProvider, IQueueProvider> factory)
+        public void UseQueue(Func<IServiceProvider, IWhenDoQueueProvider> factory)
         {
             QueueFactory = factory;
         }
+
+
     }
 }

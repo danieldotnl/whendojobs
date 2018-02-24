@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using WhenDoJobs.Core.Interfaces;
@@ -15,7 +16,7 @@ namespace WhenDoJobs.Core
 {
     public class WhenDoEngine : IWhenDoEngine
     {
-        private IQueueProvider persistence;
+        private IWhenDoQueueProvider persistence;
         private ILogger<WhenDoEngine> logger;
         private IServiceProvider serviceProvider;
         private IDateTimeProvider dateTimeProvider;
@@ -24,7 +25,7 @@ namespace WhenDoJobs.Core
         private BackgroundJobServer hangfireServer;
         private JobStorage hangfireStorage;
 
-        public WhenDoEngine(IQueueProvider persistence, IServiceProvider serviceProvider,
+        public WhenDoEngine(IWhenDoQueueProvider persistence, IServiceProvider serviceProvider,
             ILogger<WhenDoEngine> logger, IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
         {
             this.persistence = persistence;
@@ -34,6 +35,8 @@ namespace WhenDoJobs.Core
             this.registry = registry;
             this.config = config;
             this.hangfireStorage = hangfireStorage;
+
+            RegisterMessageContexts();
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -50,12 +53,11 @@ namespace WhenDoJobs.Core
                     logger.LogError("Error starting hangfire server", ex);
                 }
             }
-
-            registry.BuildServiceProvider();
+            
             logger.LogInformation("Start listing to queue");
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (persistence.GetMessage(out IMessageContext message))
+                if (persistence.GetMessage(out IWhenDoMessageContext message))
                 {
                     logger.LogTrace("Message received", message);
                     await HandleMessage(message);
@@ -69,7 +71,28 @@ namespace WhenDoJobs.Core
             }
         }
 
-        public async Task HandleMessage(IMessageContext message)
+        public void RegisterMessageContexts()
+        {
+            var contextMessage = typeof(IWhenDoMessageContext);
+
+            var types = new List<Type>();
+            var assembly = Assembly.GetEntryAssembly();
+            var assemblies = new List<AssemblyName>(assembly.GetReferencedAssemblies());
+            assemblies.Add(assembly.GetName());
+
+            foreach (var assemblyName in assemblies)
+            {
+                assembly = Assembly.Load(assemblyName);
+
+                foreach (var type in assembly.GetTypes().Where(x => contextMessage.IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract))
+                {
+                    registry.RegisterMessageContext(type.Name, type);
+                    types.Add(type);
+                }
+            }
+        }
+
+        public async Task HandleMessage(IWhenDoMessageContext message)
         {
             try
             {
@@ -93,7 +116,16 @@ namespace WhenDoJobs.Core
 
         public void RegisterJob(JobDefinition jobDefinition)
         {
-            registry.RegisterJob(jobDefinition.ToJob());
+            try
+            {
+                var job = CreateJob(jobDefinition);
+                registry.RegisterJob(job);
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, $"Could not register job {jobDefinition.Id}");
+                throw;
+            }
         }
 
         public void RegisterCommandHandler<T>(string type) where T : class, IWhenDoCommandHandler
@@ -104,6 +136,14 @@ namespace WhenDoJobs.Core
         public void ClearJobRegister()
         {
             registry.ClearJobRegister();
+        }
+
+        private IWhenDoJob CreateJob(JobDefinition jobDefinition)
+        {
+            var type = registry.GetMessageContextType(jobDefinition.Context);
+            var mi = typeof(WhenDoExtensions).GetMethod("ToJob", true);
+            var method = mi.MakeGenericMethod(type);
+            return (IWhenDoJob)method.Invoke(typeof(WhenDoExtensions), new object[] { jobDefinition });
         }
     }
 }

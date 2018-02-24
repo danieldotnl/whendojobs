@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Tests.Helpers
 {
-    public class TestMessage : IMessageContext
+    public class TestMessage : IWhenDoMessageContext
     {
         public double DoubleValue { get; set; }
         public string StringValue { get; set; }

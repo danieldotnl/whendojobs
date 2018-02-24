@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobsApp.Messages
 {
-    public class TemperatureMessage : IMessageContext
+    public class TemperatureMessage : IWhenDoMessageContext
     {
         public double Temperature { get; set; }
         public string Area { get; set; }

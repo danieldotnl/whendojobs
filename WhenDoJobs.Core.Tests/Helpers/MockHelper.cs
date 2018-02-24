@@ -4,7 +4,6 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WhenDoJobs.Core.Commands;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Services;
 
