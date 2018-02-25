@@ -22,7 +22,7 @@ namespace WhenDoJobs.Core.Services
             this.logger = logger;
         }
 
-        public async Task ExecuteAsync(IWhenDoJob job)
+        public async Task ExecuteAsync(IWhenDoJob job, IWhenDoMessageContext context)
         {
             foreach (var command in job.Commands)
             {
@@ -32,19 +32,19 @@ namespace WhenDoJobs.Core.Services
                     {
                         case ExecutionMode.Default:
                             var commandExecutor = serviceProvider.GetRequiredService<IWhenDoCommandExecutor>();
-                            await commandExecutor.ExecuteAsync(command.Type, command.MethodName, command.Parameters);
+                            await commandExecutor.ExecuteAsync(context, command.Type, command.MethodName, command.Parameters);
                             break;
                         case ExecutionMode.Reliable:
-                            jobClient.Enqueue<IWhenDoCommandExecutor>(x => x.ExecuteAsync(command.Type, command.MethodName, command.Parameters));
+                            jobClient.Enqueue<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, command.Type, command.MethodName, command.Parameters));
                             break;
                         case ExecutionMode.Delayed:
-                            jobClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(command.Type, command.MethodName, command.Parameters), command.ExecutionStrategy.Time);
+                            jobClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, command.Type, command.MethodName, command.Parameters), command.ExecutionStrategy.Time);
                             break;
                         case ExecutionMode.Scheduled:
                             var today = DateTime.Today;
                             var time = command.ExecutionStrategy.Time;
                             var executionTime = (today + time > DateTime.Now) ? today + time : today.AddDays(1) + time;
-                            jobClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(command.Type, command.MethodName, command.Parameters), executionTime);
+                            jobClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, command.Type, command.MethodName, command.Parameters), executionTime);
                             logger.LogInformation($"Scheduled command {command.Type} at {time.ToString()}");
                             break;
                     }

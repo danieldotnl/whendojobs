@@ -22,10 +22,10 @@ namespace WhenDoJobs.Core.Tests
             var executor = new WhenDoCommandExecutor(MockHelper.CreateRegistryMock(handlerMock.Object).Object, MockHelper.CreateLogger<WhenDoCommandExecutor>());
 
             await Assert.ThrowsExceptionAsync<InvalidCommandException>(async () =>
-                        await executor.ExecuteAsync("Logging", "LogError", new Dictionary<string, object>() { { "texxxt", "unit test command 1" } }));
+                        await executor.ExecuteAsync(new TestMessage(), "Logging", "LogError", new Dictionary<string, object>() { { "texxxt", "unit test command 1" } }));
 
             await Assert.ThrowsExceptionAsync<InvalidCommandException>(async () =>
-                        await executor.ExecuteAsync("Logging", "LogError",
+                        await executor.ExecuteAsync(new TestMessage(), "Logging", "LogError",
                             new Dictionary<string, object>()
                                 {
                                     { "text", "unit test command 1" },

@@ -1,6 +1,8 @@
 ﻿using Hangfire;
+using Hangfire.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +48,10 @@ namespace WhenDoJobs.Core
                 try
                 {
                     GlobalConfiguration.Configuration.UseActivator(new HangfireJobActivator(serviceProvider));
+                    JobHelper.SetSerializerSettings(new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    });
                     this.hangfireServer = new BackgroundJobServer(hangfireStorage);
                 }
                 catch(Exception ex)
@@ -71,7 +77,7 @@ namespace WhenDoJobs.Core
             }
         }
 
-        public void RegisterMessageContexts()
+        private void RegisterMessageContexts()
         {
             var contextMessage = typeof(IWhenDoMessageContext);
 
@@ -102,7 +108,7 @@ namespace WhenDoJobs.Core
                     var jobExecutor = serviceProvider.GetRequiredService<IWhenDoJobExecutor>();
                     //TODO: foreachasync extension method??
                     var tasks = new List<Task>();
-                    executableJobs.ForEach((x) => tasks.Add(jobExecutor.ExecuteAsync(x)));
+                    executableJobs.ForEach((x) => tasks.Add(jobExecutor.ExecuteAsync(x, message)));
                     await Task.WhenAll(tasks);
                 }
                 else

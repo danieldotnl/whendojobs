@@ -39,7 +39,7 @@ namespace WhenDoJobs.Core.Tests
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
             var jobExecutor = new WhenDoJobExecutor(new Mock<IServiceProvider>().Object, hangfireMock.Object, joblogger);
-            await jobExecutor.ExecuteAsync(job);
+            await jobExecutor.ExecuteAsync(job, new TestMessage());
 
             Assert.AreEqual(0, handlerlogger.Count);
             hangfireMock.Verify(x => x.Create(It.IsAny<Job>(), It.IsAny<ScheduledState>()));
@@ -60,13 +60,13 @@ namespace WhenDoJobs.Core.Tests
             handlerMock.Setup(x => x.LogWarningAsync(It.IsAny<string>()));
 
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
-            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Returns(Task.CompletedTask);
+            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessageContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Returns(Task.CompletedTask);
 
             IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
 
-            await executor.ExecuteAsync(job);
+            await executor.ExecuteAsync(job, new TestMessage());
 
-            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(2));
+            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessageContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(2));
         } 
         
         [TestMethod]
@@ -79,13 +79,13 @@ namespace WhenDoJobs.Core.Tests
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
-            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Throws(new Exception());
+            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessageContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Throws(new Exception());
 
             IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
 
-            await executor.ExecuteAsync(job);
+            await executor.ExecuteAsync(job, new TestMessage());
 
-            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(4));
+            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessageContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(4));
         }
 
         private IWhenDoJob CreateJob()
