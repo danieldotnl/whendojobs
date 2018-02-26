@@ -13,6 +13,8 @@ namespace WhenDoJobs.Core
     {
         public static Delegate ParseExpression(string condition, string contextString, Type context)
         {
+            if (string.IsNullOrEmpty(condition))
+                condition = "true";
             var param = Expression.Parameter(context, contextString);
             var e = DynamicExpressionParser.ParseLambda(new[] { param }, typeof(bool), condition);
             return e.Compile();

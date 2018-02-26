@@ -40,11 +40,5 @@ namespace WhenDoJobs.Core
             //var engine = provider.GetRequiredService<IWhenDoEngine>();
             //engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
         }
-
-        public static WhenDoConfiguration UseInMemoryQueue(this WhenDoConfiguration options)
-        {
-            options.UseQueue(sp => new InMemoryQueueProvider());
-            return options;
-        }
     }
 }

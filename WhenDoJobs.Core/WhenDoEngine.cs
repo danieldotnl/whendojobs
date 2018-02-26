@@ -102,7 +102,8 @@ namespace WhenDoJobs.Core
         {
             try
             {
-                var executableJobs = registry.Jobs.Where(x => x.Evaluate(message) && x.IsRunnable(dateTimeProvider)).ToList();
+                var executableJobs = registry.Jobs.Where(
+                    x => x.GetType().GetGenericArguments()[0] == message.GetType() && x.Evaluate(message) && x.IsRunnable(dateTimeProvider)).ToList();
                 if (executableJobs.Count > 0)
                 {
                     var jobExecutor = serviceProvider.GetRequiredService<IWhenDoJobExecutor>();
