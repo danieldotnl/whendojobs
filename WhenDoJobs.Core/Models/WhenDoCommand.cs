@@ -5,14 +5,14 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Models
 {
-    public class Command : IWhenDoCommand
+    public class WhenDoCommand : IWhenDoCommand
     {
         public string Type { get; set; }
         public string MethodName { get; set; }
         public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
         public ExecutionStrategy ExecutionStrategy { get; set; }
 
-        public Command()
+        public WhenDoCommand()
         {
             ExecutionStrategy = new ExecutionStrategy();
         }

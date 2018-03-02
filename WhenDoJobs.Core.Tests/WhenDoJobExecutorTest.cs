@@ -22,7 +22,7 @@ namespace WhenDoJobs.Core.Tests
         [TestMethod]
         public async Task ExecuteDelayedCommandInJob()
         {
-            var command = new Command()
+            var command = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogError",
@@ -93,14 +93,14 @@ namespace WhenDoJobs.Core.Tests
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
 
-            var command1 = new Command()
+            var command1 = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogError",
                 Parameters = new Dictionary<string, object>() { { "text", "unit test error command 1" } }
             };
 
-            var command2 = new Command()
+            var command2 = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogWarning",
@@ -117,28 +117,28 @@ namespace WhenDoJobs.Core.Tests
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
 
-            var command1 = new Command()
+            var command1 = new WhenDoCommand()
             {
                 Type = "BlaBla", //handler doesn't exist
                 MethodName = "LogError", 
                 Parameters = new Dictionary<string, object>() { { "text", "unit test command 1" } }
             };
 
-            var command2 = new Command()
+            var command2 = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogErrors", //method doesn't exist
                 Parameters = new Dictionary<string, object>() { { "text", "unit test command 1" } }
             };
 
-            var command3 = new Command()
+            var command3 = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogError", 
                 Parameters = new Dictionary<string, object>() { { "blabla", "unit test command 1" } } //parameter doesn't exist
             };
 
-            var command4 = new Command()
+            var command4 = new WhenDoCommand()
             {
                 Type = "Logging",
                 MethodName = "LogError",

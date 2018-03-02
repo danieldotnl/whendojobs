@@ -42,7 +42,7 @@ namespace WhenDoJobs.Core
 
         public static IWhenDoCommand ToCommand(this CommandDefinition definition)
         {
-            var command = new Command()
+            var command = new WhenDoCommand()
             {
                 Type = definition.Type,
                 MethodName = definition.Command,
