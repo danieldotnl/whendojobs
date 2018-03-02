@@ -33,7 +33,7 @@ namespace WhenDoJobs.Core.Tests
                 }
             };
 
-            var job = jobDefinition.ToJob<TestMessage>();
+            var job = jobDefinition.ToJob(typeof(TestMessage));
 
             Assert.IsNotNull(job.Condition);
             Assert.AreEqual(1, job.Commands.Count());

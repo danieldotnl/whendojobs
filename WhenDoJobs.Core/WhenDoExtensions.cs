@@ -10,9 +10,9 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static IWhenDoJob ToJob<TContext>(this JobDefinition definition) where TContext : IWhenDoMessageContext
-        {
-            var job = new Job<TContext>()
+        public static IWhenDoJob ToJob(this JobDefinition definition, Type contextType)
+        { 
+            var job = new WhenDoJob()
             {
                 Id = definition.Id,
                 Version = definition.Version,
@@ -20,7 +20,7 @@ namespace WhenDoJobs.Core
                 DisabledFrom = definition.DisabledFrom,
                 DisabledTill = definition.DisabledTill,
 
-                Condition = WhenDoHelpers.ParseExpression(definition.When, definition.Context, typeof(TContext)),
+                Condition = WhenDoHelpers.ParseExpression(definition.When, definition.Context, contextType),
                 Commands = definition.Do.Select(x => x.ToCommand())
             };
             return job;

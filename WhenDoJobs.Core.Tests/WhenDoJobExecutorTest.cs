@@ -29,7 +29,7 @@ namespace WhenDoJobs.Core.Tests
                 Parameters = new Dictionary<string, object>() { { "text", "this is a delayed command" } },
                 ExecutionStrategy = new ExecutionStrategy() { Mode = ExecutionMode.Delayed, Time = TimeSpan.FromSeconds(10) }
             };
-            var job = new Job<TestMessage>();
+            var job = new WhenDoJob();
             job.Commands = new List<IWhenDoCommand>() { command };
 
             var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
@@ -90,7 +90,7 @@ namespace WhenDoJobs.Core.Tests
 
         private IWhenDoJob CreateJob()
         {
-            var job = new Job<TestMessage>();
+            var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
 
             var command1 = new Command()
@@ -114,7 +114,7 @@ namespace WhenDoJobs.Core.Tests
 
         private IWhenDoJob CreateJobWithInvalidCommands()
         {
-            var job = new Job<TestMessage>();
+            var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
 
             var command1 = new Command()

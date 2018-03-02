@@ -26,7 +26,7 @@ namespace WhenDoJobs.Core.Tests.Helpers
                 Count++;
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
                 throw;

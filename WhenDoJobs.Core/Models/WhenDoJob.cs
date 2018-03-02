@@ -4,7 +4,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Models
 {
-    public class Job<TContext> : IWhenDoJob where TContext : IWhenDoMessageContext
+    public class WhenDoJob : IWhenDoJob
     {
         public string Id { get; set; }
         public int Version { get; set; }

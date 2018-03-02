@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhenDoJobs.Core", "WhenDoJobs.Core\WhenDoJobs.Core.csproj", "{25FA1DEE-B0F0-43B0-A92A-257B4ED7D157}"
 EndProject

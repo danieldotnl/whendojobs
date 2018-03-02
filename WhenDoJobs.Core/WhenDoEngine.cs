@@ -125,8 +125,8 @@ namespace WhenDoJobs.Core
         {
             try
             {
-                var job = CreateJob(jobDefinition);
-                registry.RegisterJob(job);
+                var type = registry.GetMessageContextType(jobDefinition.Context);
+                registry.RegisterJob(jobDefinition.ToJob(type));
             }
             catch(Exception ex)
             {
@@ -143,14 +143,6 @@ namespace WhenDoJobs.Core
         public void ClearJobRegister()
         {
             registry.ClearJobRegister();
-        }
-
-        private IWhenDoJob CreateJob(JobDefinition jobDefinition)
-        {
-            var type = registry.GetMessageContextType(jobDefinition.Context);
-            var mi = typeof(WhenDoExtensions).GetMethod("ToJob", true);
-            var method = mi.MakeGenericMethod(type);
-            return (IWhenDoJob)method.Invoke(typeof(WhenDoExtensions), new object[] { jobDefinition });
         }
     }
 }
