@@ -26,7 +26,7 @@ namespace WhenDoJobs.Core.Models
             return true;
         }
 
-        public bool Evaluate(IWhenDoMessageContext context)
+        public bool Evaluate(IWhenDoMessage context)
         {
             var result = (bool)Condition.DynamicInvoke(context);
             return result;

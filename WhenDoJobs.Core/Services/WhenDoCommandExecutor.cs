@@ -21,7 +21,7 @@ namespace WhenDoJobs.Core.Services
             this.logger = logger;
         }
 
-        public async Task ExecuteAsync(IWhenDoMessageContext context, string type, string methodName, Dictionary<string, object> parameters)
+        public async Task ExecuteAsync(IWhenDoMessage context, string type, string methodName, Dictionary<string, object> parameters)
         {
             var commandHandler = registry.GetCommandHandler(type);
             try
@@ -36,7 +36,7 @@ namespace WhenDoJobs.Core.Services
 
                 foreach (var param in methodParams)
                 {
-                    if (param.ParameterType.Equals(typeof(IWhenDoMessageContext)))
+                    if (param.ParameterType.Equals(typeof(IWhenDoMessage)))
                         invocationParams.Add(context);
                     else
                         invocationParams.Add(parameters[param.Name]);
@@ -62,7 +62,7 @@ namespace WhenDoJobs.Core.Services
             foreach (var method in methods)
             {
                 var parameters = method.GetParameters();
-                if(parameters.Where(x => x.ParameterType.Equals(typeof(IWhenDoMessageContext))).Count() == 1)
+                if(parameters.Where(x => x.ParameterType.Equals(typeof(IWhenDoMessage))).Count() == 1)
                 {
                     if (parameterCount == parameters.Count() - 1)
                         return method;

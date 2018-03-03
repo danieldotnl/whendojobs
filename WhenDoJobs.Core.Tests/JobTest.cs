@@ -15,7 +15,7 @@ namespace WhenDoJobs.Core.Tests
         [TestMethod]
         public void IsNotRunnableWhenDisabled()
         {
-            var message = new Mock<IWhenDoMessageContext>().Object;
+            var message = new Mock<IWhenDoMessage>().Object;
             var dtp = MockHelper.CreateDateTimeProviderMock().Object;
 
             var job = new WhenDoJob();
@@ -30,7 +30,7 @@ namespace WhenDoJobs.Core.Tests
         [TestMethod]
         public void IsNotRunnableWithinDisabledTimeFrame()
         {
-            var message = new Mock<IWhenDoMessageContext>().Object;
+            var message = new Mock<IWhenDoMessage>().Object;
             var dtpMock = MockHelper.CreateDateTimeProviderMock();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
             var dtp = dtpMock.Object;
@@ -46,7 +46,7 @@ namespace WhenDoJobs.Core.Tests
         [TestMethod]
         public void IsRunnableOutsideDisabledTimeFrame()
         {
-            var message = new Mock<IWhenDoMessageContext>().Object;
+            var message = new Mock<IWhenDoMessage>().Object;
             var dtpMock = MockHelper.CreateDateTimeProviderMock();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
             var dtp = dtpMock.Object;

@@ -6,7 +6,7 @@ namespace WhenDoJobs.Core.Interfaces
 {
     public interface IWhenDoQueueProvider
     {
-        void EnqueueMessage(IWhenDoMessageContext message);
-        bool GetMessage(out IWhenDoMessageContext message);
+        void EnqueueMessage(IWhenDoMessage message);
+        bool GetMessage(out IWhenDoMessage message);
     }
 }

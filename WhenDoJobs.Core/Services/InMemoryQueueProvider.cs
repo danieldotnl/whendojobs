@@ -6,16 +6,16 @@ namespace WhenDoJobs.Core.Services
 {
     public class InMemoryQueueProvider : IInMemoryQueueProvider
     {
-        private ConcurrentQueue<IWhenDoMessageContext> queue = new ConcurrentQueue<IWhenDoMessageContext>();
+        private ConcurrentQueue<IWhenDoMessage> queue = new ConcurrentQueue<IWhenDoMessage>();
 
-        public void EnqueueMessage(IWhenDoMessageContext message)
+        public void EnqueueMessage(IWhenDoMessage message)
         {
             queue.Enqueue(message);
         }
 
-        public bool GetMessage(out IWhenDoMessageContext message)
+        public bool GetMessage(out IWhenDoMessage message)
         {
-            var success = queue.TryDequeue(out IWhenDoMessageContext result);
+            var success = queue.TryDequeue(out IWhenDoMessage result);
             message = result;
             return success;
         }

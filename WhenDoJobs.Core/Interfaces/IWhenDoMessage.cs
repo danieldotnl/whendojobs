@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface IWhenDoMessageContext
+    public interface IWhenDoMessage
     {
     }
 }

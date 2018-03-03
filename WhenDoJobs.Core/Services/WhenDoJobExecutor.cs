@@ -22,7 +22,7 @@ namespace WhenDoJobs.Core.Services
             this.logger = logger;
         }
 
-        public async Task ExecuteAsync(IWhenDoJob job, IWhenDoMessageContext context)
+        public async Task ExecuteAsync(IWhenDoJob job, IWhenDoMessage context)
         {
             foreach (var command in job.Commands)
             {

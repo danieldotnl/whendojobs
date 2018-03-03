@@ -63,7 +63,7 @@ namespace WhenDoJobs.Core
             logger.LogInformation("Start listing to queue");
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (persistence.GetMessage(out IWhenDoMessageContext message))
+                if (persistence.GetMessage(out IWhenDoMessage message))
                 {
                     logger.LogTrace("Message received", message);
                     await HandleMessage(message);
@@ -79,7 +79,7 @@ namespace WhenDoJobs.Core
 
         private void RegisterMessageContexts()
         {
-            var contextMessage = typeof(IWhenDoMessageContext);
+            var contextMessage = typeof(IWhenDoMessage);
 
             var types = new List<Type>();
             var assembly = Assembly.GetEntryAssembly();
@@ -98,7 +98,7 @@ namespace WhenDoJobs.Core
             }
         }
 
-        public async Task HandleMessage(IWhenDoMessageContext message)
+        public async Task HandleMessage(IWhenDoMessage message)
         {
             try
             {
