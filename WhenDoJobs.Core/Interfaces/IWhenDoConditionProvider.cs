@@ -4,7 +4,8 @@ using System.Text;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface IWhenDoMessage : IWhenDoConditionProvider
+    public interface IWhenDoConditionProvider
     {
+        //string Id { get; }
     }
 }

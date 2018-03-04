@@ -12,7 +12,8 @@ namespace WhenDoJobs.Core.Interfaces
         void ClearJobRegister();
         void RegisterCommandHandler<TCommand>(string type) where TCommand : class, IWhenDoCommandHandler;
         IWhenDoCommandHandler GetCommandHandler(string type);
-        void RegisterMessageContext(string name, Type type);
-        Type GetMessageContextType(string name);
+        void RegisterConditionProvider(string name, Type type);
+        Type GetConditionProviderType(string name);
+        IWhenDoConditionProvider GetConditionProvider(string name);
     }
 }

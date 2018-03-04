@@ -1,11 +1,11 @@
 {
 	"id": "TemperatureBetween15and20",
 	"version": 1,
-	"disabledFrom": "20:55:00",
+	"disabledFrom": "10:00:00",
 	"disabledTill": "21:00:00",
 	"disabled": false,
-	"context": "TemperatureMessage",
-	"when": "TemperatureMessage.Area = \"Livingroom\" AND TemperatureMessage.Temperature > 15.0 AND TemperatureMessage.Temperature < 20.0",
+	"providers": ["msg=TemperatureMessage", "dtp=DateTime"],
+	"when": "msg.Area = \"Livingroom\" AND msg.Temperature > 15.0 AND msg.Temperature < 20.0 AND dtp.CurrentTime > \"10:00\"",
 	"do": [{
 		"type": "Logging",
 		"command": "LogError",
@@ -16,6 +16,11 @@
 		"command": "scene",
 		"id": "OHC Sunset",
 		"area": "living room"
+	},
+	{
+		"type": "Persistence",
+		"command": "Save",
+		"message": "context"
 	},
 	{
 		"type": "Logging",
@@ -35,12 +40,12 @@
 			"time": "20:00"
 		}
 	},
-	{
-		"type": "Logging",
-		"command": "LogError",
-		"text": "Dit is een reliable test",
-		"execution": {
-			"mode": "reliable"
-		}
-	}]
+    {
+      "type": "Logging",
+      "command": "LogError",
+      "text": "Dit is een reliable test",
+      "execution": {
+        "mode": "reliable"
+      }
+    }]
 }

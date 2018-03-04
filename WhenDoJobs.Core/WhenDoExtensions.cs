@@ -10,7 +10,7 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static IWhenDoJob ToJob(this JobDefinition definition, Type contextType)
+        public static IWhenDoJob ToJob(this JobDefinition definition, Dictionary<string, Type> providers)
         { 
             var job = new WhenDoJob()
             {
@@ -19,11 +19,25 @@ namespace WhenDoJobs.Core
                 Disabled = definition.Disabled,
                 DisabledFrom = definition.DisabledFrom,
                 DisabledTill = definition.DisabledTill,
+                ConditionProviders = GetProviderNames(definition.Providers),
 
-                Condition = WhenDoHelpers.ParseExpression(definition.When, definition.Context, contextType),
+                Condition = WhenDoHelpers.ParseExpression(definition.When, providers),
                 Commands = definition.Do.Select(x => x.ToCommand())
             };
             return job;
+        }
+
+        private static List<string> GetProviderNames(List<string> providerDefs)
+        {
+            var names = new List<string>();
+            foreach (var prov in providerDefs)
+            {
+                if (prov.Contains('='))
+                    names.Add(prov.Split('=')[1]);
+                else
+                    names.Add(prov);
+            }
+            return names;
         }
 
         public static MethodInfo GetMethod(this Type type, string name, bool generic)

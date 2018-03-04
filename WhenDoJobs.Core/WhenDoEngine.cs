@@ -18,27 +18,27 @@ namespace WhenDoJobs.Core
 {
     public class WhenDoEngine : IWhenDoEngine
     {
-        private IWhenDoQueueProvider persistence;
+        private IWhenDoQueueProvider queue;
         private ILogger<WhenDoEngine> logger;
         private IServiceProvider serviceProvider;
-        private IDateTimeProvider dateTimeProvider;
         private IWhenDoRegistry registry;
         private WhenDoConfiguration config;
         private BackgroundJobServer hangfireServer;
         private JobStorage hangfireStorage;
+        private IWhenDoJobManager jobManager;
 
-        public WhenDoEngine(IWhenDoQueueProvider persistence, IServiceProvider serviceProvider,
-            ILogger<WhenDoEngine> logger, IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
+        public WhenDoEngine(IWhenDoQueueProvider queue, IServiceProvider serviceProvider, IWhenDoJobManager jobManager,
+            ILogger<WhenDoEngine> logger,IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
         {
-            this.persistence = persistence;
+            this.queue = queue;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
-            this.dateTimeProvider = dateTimeProvider;
             this.registry = registry;
             this.config = config;
             this.hangfireStorage = hangfireStorage;
+            this.jobManager = jobManager;
 
-            RegisterMessageContexts();
+            RegisterConditionProviders();
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -63,10 +63,10 @@ namespace WhenDoJobs.Core
             logger.LogInformation("Start listing to queue");
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (persistence.GetMessage(out IWhenDoMessage message))
+                if (queue.GetMessage(out IWhenDoMessage message))
                 {
                     logger.LogTrace("Message received", message);
-                    await HandleMessage(message);
+                    await jobManager.Handle(message);
                     continue;
                 }
                 await Task.Delay(1000);
@@ -77,11 +77,10 @@ namespace WhenDoJobs.Core
             }
         }
 
-        private void RegisterMessageContexts()
+        private void RegisterConditionProviders()
         {
-            var contextMessage = typeof(IWhenDoMessage);
+            var providerInterface = typeof(IWhenDoConditionProvider);
 
-            var types = new List<Type>();
             var assembly = Assembly.GetEntryAssembly();
             var assemblies = new List<AssemblyName>(assembly.GetReferencedAssemblies());
             assemblies.Add(assembly.GetName());
@@ -90,49 +89,49 @@ namespace WhenDoJobs.Core
             {
                 assembly = Assembly.Load(assemblyName);
 
-                foreach (var type in assembly.GetTypes().Where(x => contextMessage.IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract))
+                foreach (var type in assembly.GetTypes().Where(x => providerInterface.IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract))
                 {
-                    registry.RegisterMessageContext(type.Name, type);
-                    types.Add(type);
+                    string name;
+                    if (type.Name.EndsWith("Provider"))
+                        name = type.Name.Substring(0, type.Name.Length - 8);
+                    else
+                        name = type.Name;
+                    registry.RegisterConditionProvider(name, type);
                 }
             }
         }
-
-        public async Task HandleMessage(IWhenDoMessage message)
-        {
-            try
-            {
-                var executableJobs = registry.Jobs.Where(
-                    x => x.GetType().GetGenericArguments()[0] == message.GetType() && x.Evaluate(message) && x.IsRunnable(dateTimeProvider)).ToList();
-                if (executableJobs.Count > 0)
-                {
-                    var jobExecutor = serviceProvider.GetRequiredService<IWhenDoJobExecutor>();
-                    //TODO: foreachasync extension method??
-                    var tasks = new List<Task>();
-                    executableJobs.ForEach((x) => tasks.Add(jobExecutor.ExecuteAsync(x, message)));
-                    await Task.WhenAll(tasks);
-                }
-                else
-                    logger.LogInformation("No jobs to be executed for message {message}", message);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Error processing queue message: {error}", ex, message);
-            }
-        }             
 
         public void RegisterJob(JobDefinition jobDefinition)
         {
             try
             {
-                var type = registry.GetMessageContextType(jobDefinition.Context);
-                registry.RegisterJob(jobDefinition.ToJob(type));
+                var providers = GetProviders(jobDefinition.Providers);
+                //var type = registry.GetConditionProviderType(jobDefinition.Context);
+                registry.RegisterJob(jobDefinition.ToJob(providers));
             }
             catch(Exception ex)
             {
                 logger.LogError(ex, $"Could not register job {jobDefinition.Id}");
                 throw;
             }
+        }
+
+        private Dictionary<string, Type> GetProviders(List<string> providerList)
+        {
+            Dictionary<string, Type> providers = new Dictionary<string, Type>();
+            foreach (var prov in providerList)
+            {
+                if (prov.Contains('='))
+                {
+                    var provPair = prov.Split('=');
+                    providers.Add(provPair[0].Trim(), registry.GetConditionProviderType(provPair[1].Trim()));
+                }
+                else
+                {
+                    providers.Add(prov, registry.GetConditionProviderType(prov.Trim()));
+                }
+            }
+            return providers;
         }
 
         public void RegisterCommandHandler<T>(string type) where T : class, IWhenDoCommandHandler

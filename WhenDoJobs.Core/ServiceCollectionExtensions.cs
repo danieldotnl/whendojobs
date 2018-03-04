@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Models;
+using WhenDoJobs.Core.Providers;
 using WhenDoJobs.Core.Services;
 
 namespace WhenDoJobs.Core
@@ -27,6 +28,7 @@ namespace WhenDoJobs.Core
             services.AddSingleton<WhenDoConfiguration>(config);
             services.AddSingleton<IWhenDoQueueProvider>(config.QueueFactory);
             services.AddTransient<IBackgroundJobClient, BackgroundJobClient>();
+            services.AddTransient<IWhenDoJobManager, WhenDoJobManager>();
             services.AddSingleton<IWhenDoEngine, WhenDoEngine>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
             services.AddTransient<IWhenDoJobExecutor, WhenDoJobExecutor>();

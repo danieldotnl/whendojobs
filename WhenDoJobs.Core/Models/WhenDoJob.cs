@@ -11,25 +11,8 @@ namespace WhenDoJobs.Core.Models
         public bool Disabled { get; set; }
         public TimeSpan? DisabledFrom { get; set; }
         public TimeSpan? DisabledTill { get; set; }
+        public List<string> ConditionProviders { get; set;} = new List<string>();
         public Delegate Condition { get; set; }
-        public IEnumerable<IWhenDoCommand> Commands { get; set; }
-
-        public bool IsRunnable(IDateTimeProvider dtp)
-        {
-            if (Disabled)
-                return false;
-            if (DisabledFrom.HasValue && DisabledTill.HasValue)
-            {
-                var time = dtp.CurrentTime;
-                return time < DisabledFrom.Value || time > DisabledTill.Value;
-            }
-            return true;
-        }
-
-        public bool Evaluate(IWhenDoMessage context)
-        {
-            var result = (bool)Condition.DynamicInvoke(context);
-            return result;
-        }
+        public IEnumerable<IWhenDoCommand> Commands { get; set; }        
     }
 }

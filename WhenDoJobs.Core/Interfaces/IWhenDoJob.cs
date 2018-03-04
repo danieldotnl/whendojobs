@@ -13,8 +13,8 @@ namespace WhenDoJobs.Core.Interfaces
         bool Disabled { get; set; }
         Delegate Condition { get; set; }
         IEnumerable<IWhenDoCommand> Commands { get; set; }
+        List<string> ConditionProviders { get; set; }
 
-        bool Evaluate(IWhenDoMessage context);
-        bool IsRunnable(IDateTimeProvider dateTimeProvider);
+
     }
 }

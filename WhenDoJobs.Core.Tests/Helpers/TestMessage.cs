@@ -10,5 +10,7 @@ namespace WhenDoJobs.Core.Tests.Helpers
         public double DoubleValue { get; set; }
         public string StringValue { get; set; }
         public int IntValue { get; set; }
+
+        public string Id => nameof(TestMessage);
     }
 }

@@ -11,9 +11,9 @@ namespace WhenDoJobs.Core.Services
     public class WhenDoRegistry : IWhenDoRegistry
     {
         private IServiceCollection services;
-        private IServiceProvider provider;
+        private IServiceProvider serviceProvider;
         private Dictionary<string, Type> commandHandlers = new Dictionary<string, Type>();
-        private Dictionary<string, Type> messageContexts = new Dictionary<string, Type>();
+        private Dictionary<string, Type> conditionProviders = new Dictionary<string, Type>();
         private List<IWhenDoJob> jobs = new List<IWhenDoJob>();
 
         public IEnumerable<IWhenDoJob> Jobs { get { return jobs; } }
@@ -21,7 +21,7 @@ namespace WhenDoJobs.Core.Services
         public WhenDoRegistry(IServiceCollection services, IServiceProvider serviceProvider)
         {
             this.services = services;
-            this.provider = serviceProvider;
+            this.serviceProvider = serviceProvider;
         }
 
         public IWhenDoCommandHandler GetCommandHandler(string type)
@@ -29,7 +29,7 @@ namespace WhenDoJobs.Core.Services
             if (commandHandlers.ContainsKey(type))
             {
                 var cmd = commandHandlers[type];
-                var handler = provider.GetRequiredService(cmd);
+                var handler = serviceProvider.GetRequiredService(cmd);
                 return (IWhenDoCommandHandler)handler;
             }
             else
@@ -39,7 +39,7 @@ namespace WhenDoJobs.Core.Services
         public void RegisterCommandHandler<T>(string type) where T : class, IWhenDoCommandHandler
         {
             services.AddTransient<T>();
-            provider = services.BuildServiceProvider();
+            serviceProvider = services.BuildServiceProvider();
             commandHandlers.Add(type, typeof(T));
         }
 
@@ -53,19 +53,29 @@ namespace WhenDoJobs.Core.Services
             jobs.Clear();
         }
 
-        public void RegisterMessageContext(string name, Type type)
+        public void RegisterConditionProvider(string name, Type type)
         {
-            messageContexts.Add(name, type);
+            services.AddTransient(type);
+            serviceProvider = services.BuildServiceProvider();
+            conditionProviders.Add(name, type);
         }
 
-        public Type GetMessageContextType(string name)
+        public Type GetConditionProviderType(string name)
         {
-            if (messageContexts.ContainsKey(name))
+            if (conditionProviders.ContainsKey(name))
             {
-                return messageContexts[name];
+                return conditionProviders[name];
             }
             else
-                throw new MessageContextNotRegisteredException("No such message context has been registered", name);
+                throw new ConditionProviderNotRegisteredException("No such condition provider has been registered", name);
+        }
+
+        public IWhenDoConditionProvider GetConditionProvider(string name)
+        {
+            if (conditionProviders.ContainsKey(name))
+                return (IWhenDoConditionProvider)serviceProvider.GetRequiredService(conditionProviders[name]);
+            else
+                throw new ConditionProviderNotRegisteredException("No such condition provider has been registered", name);
         }
     }
 }

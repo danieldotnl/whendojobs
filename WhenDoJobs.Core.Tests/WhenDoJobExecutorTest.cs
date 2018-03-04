@@ -49,10 +49,7 @@ namespace WhenDoJobs.Core.Tests
         public async Task AllCommandsInJobShouldBeRun()
         {
             var job = CreateJob();
-            Assert.IsTrue(job.Evaluate(new TestMessage()));
-
             var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
-
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
             var handlerMock = new Mock<ILoggingCommandHandler>();
@@ -73,8 +70,6 @@ namespace WhenDoJobs.Core.Tests
         public async Task ExecutionShouldContinueAfterInvalidCommands()
         {
             var job = CreateJobWithInvalidCommands();
-            Assert.IsTrue(job.Evaluate(new TestMessage()));
-
             var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
@@ -91,7 +86,7 @@ namespace WhenDoJobs.Core.Tests
         private IWhenDoJob CreateJob()
         {
             var job = new WhenDoJob();
-            job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
+            job.Condition = WhenDoHelpers.ParseExpression("true", new Dictionary<string, Type>() { { "Test", typeof(TestMessage) } });
 
             var command1 = new WhenDoCommand()
             {
@@ -115,7 +110,7 @@ namespace WhenDoJobs.Core.Tests
         private IWhenDoJob CreateJobWithInvalidCommands()
         {
             var job = new WhenDoJob();
-            job.Condition = WhenDoHelpers.ParseExpression("true", "Test", typeof(TestMessage));
+            job.Condition = WhenDoHelpers.ParseExpression("true", new Dictionary<string, Type>() { { "Test", typeof(TestMessage) } });
 
             var command1 = new WhenDoCommand()
             {

@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace WhenDoJobs.Core.Tests
         {
             var jobDefinition = new JobDefinition()
             {
-                Context = "TestMessage",
+                Providers = new List<string>() { "TestMessage" },
                 When = "TestMessage.IntValue == 3",
                 Id = "TestJobDefinition",
                 Do = new List<CommandDefinition>()
@@ -33,7 +34,7 @@ namespace WhenDoJobs.Core.Tests
                 }
             };
 
-            var job = jobDefinition.ToJob(typeof(TestMessage));
+            var job = jobDefinition.ToJob(new Dictionary<string, Type>() { { "TestMessage", typeof(TestMessage) } });
 
             Assert.IsNotNull(job.Condition);
             Assert.AreEqual(1, job.Commands.Count());

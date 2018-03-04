@@ -11,7 +11,7 @@ namespace WhenDoJobs.Core.Models
         public bool Disabled { get; set; }
         public TimeSpan? DisabledFrom { get; set; }
         public TimeSpan? DisabledTill { get; set; }
-        public string Context { get; set; }
+        public List<string> Providers { get; set; }
         public string When { get; set; }
 
         public IEnumerable<CommandDefinition> Do { get; set; }
