@@ -10,34 +10,12 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static IWhenDoJob ToJob(this JobDefinition definition, Dictionary<string, Type> providers)
-        { 
-            var job = new WhenDoJob()
-            {
-                Id = definition.Id,
-                Version = definition.Version,
-                Disabled = definition.Disabled,
-                DisabledFrom = definition.DisabledFrom,
-                DisabledTill = definition.DisabledTill,
-                ConditionProviders = GetProviderNames(definition.Providers),
-
-                Condition = WhenDoHelpers.ParseExpression(definition.When, providers),
-                Commands = definition.Do.Select(x => x.ToCommand())
-            };
-            return job;
-        }
-
-        private static List<string> GetProviderNames(List<string> providerDefs)
+        public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
         {
-            var names = new List<string>();
-            foreach (var prov in providerDefs)
-            {
-                if (prov.Contains('='))
-                    names.Add(prov.Split('=')[1]);
-                else
-                    names.Add(prov);
-            }
-            return names;
+            if (dictionary == null) { throw new ArgumentNullException(nameof(dictionary)); }
+            if (key == null) { throw new ArgumentNullException(nameof(key)); }
+
+            return dictionary.TryGetValue(key, out TValue value) ? value : defaultValue;
         }
 
         public static MethodInfo GetMethod(this Type type, string name, bool generic)
@@ -58,12 +36,13 @@ namespace WhenDoJobs.Core
         {
             var command = new WhenDoCommand()
             {
+                Id = Guid.NewGuid().ToString("N").ToLower(),
                 Type = definition.Type,
                 MethodName = definition.Command,
                 Parameters = definition.Parameters,
                 ExecutionStrategy = definition.Execution.ToExecutionStrategy()
             };
-            return command;            
+            return command;
         }
 
         public static ExecutionStrategy ToExecutionStrategy(this ExecutionStrategyDefinition definition)

@@ -7,6 +7,6 @@ namespace WhenDoJobs.Core.Interfaces
 {
     public interface IWhenDoJobExecutor
     {
-        Task ExecuteAsync(IWhenDoJob job, IWhenDoMessage context);
+        Task ExecuteJobAsync(IWhenDoJob job, IWhenDoMessage context);
     }
 }

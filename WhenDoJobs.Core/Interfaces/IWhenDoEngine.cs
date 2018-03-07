@@ -11,8 +11,9 @@ namespace WhenDoJobs.Core.Interfaces
     {
         Task RunAsync(CancellationToken cancellationToken);
 
-        void ClearJobRegister();
-        void RegisterJob(JobDefinition template);
+        Task ClearJobsAsync();
+        Task RegisterJobAsync(JobDefinition jobDefinition);
+        Task RegisterJobAsync(IWhenDoJob job);
         void RegisterCommandHandler<T>(string type)
             where T : class, IWhenDoCommandHandler;
     }

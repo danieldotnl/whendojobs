@@ -13,6 +13,7 @@ using WhenDoJobs.Core.Tests.Helpers;
 using Hangfire;
 using Hangfire.Common;
 using Hangfire.States;
+using WhenDoJobs.Core.Persistence;
 
 namespace WhenDoJobs.Core.Tests
 {
@@ -20,7 +21,7 @@ namespace WhenDoJobs.Core.Tests
     public class WhenDoJobExecutorTest
     {
         [TestMethod]
-        public async Task ExecuteDelayedCommandInJob()
+        public void ExecuteDelayedCommandInJob()
         {
             var command = new WhenDoCommand()
             {
@@ -38,15 +39,18 @@ namespace WhenDoJobs.Core.Tests
             registryMock.Setup(x => x.GetCommandHandler(It.IsAny<string>())).Returns(new LoggingCommandHandler(handlerlogger));
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
-            var jobExecutor = new WhenDoJobExecutor(new Mock<IServiceProvider>().Object, hangfireMock.Object, joblogger);
-            await jobExecutor.ExecuteAsync(job, new TestMessage());
+            var dtpMock = MockHelper.CreateDateTimeProviderMock();
+            dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registryMock.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfireMock.Object);
+            manager.ExecuteJob(job, new TestMessage());
 
             Assert.AreEqual(0, handlerlogger.Count);
             hangfireMock.Verify(x => x.Create(It.IsAny<Job>(), It.IsAny<ScheduledState>()));
         }
 
         [TestMethod]
-        public async Task AllCommandsInJobShouldBeRun()
+        public void AllCommandsInJobShouldBeRun()
         {
             var job = CreateJob();
             var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
@@ -57,30 +61,40 @@ namespace WhenDoJobs.Core.Tests
             handlerMock.Setup(x => x.LogWarningAsync(It.IsAny<string>()));
 
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
-            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Returns(Task.CompletedTask);
+            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
-            IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
+            var dtpMock = MockHelper.CreateDateTimeProviderMock();
+            dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
+            var registry = new Mock<IWhenDoRegistry>();
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            
+            manager.ExecuteJob(job, new TestMessage());
 
-            await executor.ExecuteAsync(job, new TestMessage());
-
-            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(2));
+            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(2));
         } 
         
         [TestMethod]
-        public async Task ExecutionShouldContinueAfterInvalidCommands()
+        public void ExecutionShouldContinueAfterInvalidCommands()
         {
             var job = CreateJobWithInvalidCommands();
             var joblogger = MockHelper.CreateLogger<WhenDoJobExecutor>();
             var hangfireMock = new Mock<IBackgroundJobClient>();
 
             var commandExecutorMock = new Mock<IWhenDoCommandExecutor>();
-            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>())).Throws(new Exception());
+            commandExecutorMock.Setup(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>())).Throws(new Exception());
 
-            IWhenDoJobExecutor executor = new WhenDoJobExecutor(MockHelper.CreateServiceProviderMock(commandExecutorMock.Object).Object, hangfireMock.Object, joblogger);
+            var dtpMock = MockHelper.CreateDateTimeProviderMock();
+            dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
+            var registry = new Mock<IWhenDoRegistry>();
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
-            await executor.ExecuteAsync(job, new TestMessage());
+            manager.ExecuteJob(job, new TestMessage());
 
-            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Exactly(4));
+            commandExecutorMock.Verify(x => x.ExecuteAsync(It.IsAny<IWhenDoMessage>(), It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(4));
         }
 
         private IWhenDoJob CreateJob()

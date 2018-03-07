@@ -7,11 +7,12 @@ namespace WhenDoJobs.Core.Models
 {
     public class WhenDoCommand : IWhenDoCommand
     {
+        public string Id { get; set; }
         public string Type { get; set; }
         public string MethodName { get; set; }
         public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
         public ExecutionStrategy ExecutionStrategy { get; set; }
-
+        
         public WhenDoCommand()
         {
             ExecutionStrategy = new ExecutionStrategy();

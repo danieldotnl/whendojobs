@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using WhenDoJobsApp.Messages;
 using WhenDoJobs.Core.Models;
 using WhenDoJobs.Core;
 using WhenDoJobs.Core.Interfaces;
@@ -30,7 +29,7 @@ namespace WhenDoJobsApp
             var newjob = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(path));
 
             var engine = serviceProvider.GetRequiredService<IWhenDoEngine>();
-            engine.RegisterJob(newjob);
+            engine.RegisterJobAsync(newjob);
             engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
 
             var ct = new CancellationToken();

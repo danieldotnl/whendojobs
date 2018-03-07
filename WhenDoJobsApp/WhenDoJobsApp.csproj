@@ -18,4 +18,10 @@
     <ProjectReference Include="..\WhenDoJobs.Core\WhenDoJobs.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="sample-conf.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

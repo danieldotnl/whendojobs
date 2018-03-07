@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using WhenDoJobs.Core.Interfaces;
 
-namespace WhenDoJobsApp.Messages
+namespace WhenDoJobsApp
 {
     public class TemperatureMessage : IWhenDoMessage
     {

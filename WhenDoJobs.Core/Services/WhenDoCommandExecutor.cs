@@ -14,22 +14,33 @@ namespace WhenDoJobs.Core.Services
     {
         private IWhenDoRegistry registry;
         private ILogger<WhenDoCommandExecutor> logger;
+        private IWhenDoRepository<IWhenDoJob> repository;
 
-        public WhenDoCommandExecutor(IWhenDoRegistry registry, ILogger<WhenDoCommandExecutor> logger)
+        public WhenDoCommandExecutor(IWhenDoRegistry registry, IWhenDoRepository<IWhenDoJob> repository, ILogger<WhenDoCommandExecutor> logger)
         {
+            this.repository = repository;
             this.registry = registry;
             this.logger = logger;
         }
 
-        public async Task ExecuteAsync(IWhenDoMessage context, string type, string methodName, Dictionary<string, object> parameters)
+        public async Task ExecuteAsync(IWhenDoMessage context, string jobId, string commandId)
         {
-            var commandHandler = registry.GetCommandHandler(type);
+            var job = await repository.GetByIdAsync(jobId);
+            if (job == null)
+                throw new ArgumentException($"Job {jobId} not found in repository.");
+            var command = job.Commands.Where(x => x.Id == commandId).FirstOrDefault();
+            if (command == null)
+                throw new ArgumentException($"Job {jobId} does not contain command {commandId}");
+
+            var commandHandler = registry.GetCommandHandler(command.Type);
+
             try
             {
-                var method = FindMethod(commandHandler, methodName, parameters == null ? 0 : parameters.Count);
+                var method = FindMethod(commandHandler, command.MethodName, command.Parameters == null ? 0 : command.Parameters.Count);
 
                 if (method == null)
-                    throw new InvalidCommandException($"Could not find method {methodName} in type {type} with {parameters.Count} parameters", parameters.Keys);
+                    throw new InvalidCommandException($"Could not find method {command.MethodName} in type {command.Type}"
+                         + " with {command.Parameters.Count} parameters", command.Parameters.Keys);
 
                 var invocationParams = new List<object>();
                 var methodParams = method.GetParameters();
@@ -39,16 +50,16 @@ namespace WhenDoJobs.Core.Services
                     if (param.ParameterType.Equals(typeof(IWhenDoMessage)))
                         invocationParams.Add(context);
                     else
-                        invocationParams.Add(parameters[param.Name]);
+                        invocationParams.Add(command.Parameters[param.Name]);
                 }
 
                 await (Task)method.Invoke(commandHandler, invocationParams.ToArray());
 
-                logger.LogTrace($"Succesfully executed {type}");
+                logger.LogTrace($"Succesfully executed {command.Type}");
             }
             catch (KeyNotFoundException ex)
             {
-                throw new InvalidCommandException("Invalid command, could not find required parameters", parameters.Keys, ex);
+                throw new InvalidCommandException("Invalid command, could not find required parameters", command.Parameters.Keys, ex);
             }
         }
 

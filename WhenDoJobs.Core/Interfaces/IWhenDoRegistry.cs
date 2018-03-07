@@ -6,10 +6,6 @@ namespace WhenDoJobs.Core.Interfaces
 {
     public interface IWhenDoRegistry
     {
-        IEnumerable<IWhenDoJob> Jobs { get; }
-
-        void RegisterJob(IWhenDoJob job);
-        void ClearJobRegister();
         void RegisterCommandHandler<TCommand>(string type) where TCommand : class, IWhenDoCommandHandler;
         IWhenDoCommandHandler GetCommandHandler(string type);
         void RegisterConditionProvider(string name, Type type);

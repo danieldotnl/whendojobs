@@ -23,7 +23,7 @@ namespace WhenDoJobs.Core.Services
 
         public void Schedule(DateTimeOffset dateTime, IWhenDoJob job, IWhenDoMessage message)
         {
-            jobClient.Schedule<IWhenDoJobExecutor>(je => je.ExecuteAsync(job, message), dateTime);
+            jobClient.Schedule<IWhenDoJobExecutor>(je => je.ExecuteJobAsync(job, message), dateTime);
         }
 
         public void Delay(TimeSpan time, IWhenDoJob job)

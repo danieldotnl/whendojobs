@@ -14,9 +14,6 @@ namespace WhenDoJobs.Core.Services
         private IServiceProvider serviceProvider;
         private Dictionary<string, Type> commandHandlers = new Dictionary<string, Type>();
         private Dictionary<string, Type> conditionProviders = new Dictionary<string, Type>();
-        private List<IWhenDoJob> jobs = new List<IWhenDoJob>();
-
-        public IEnumerable<IWhenDoJob> Jobs { get { return jobs; } }
 
         public WhenDoRegistry(IServiceCollection services, IServiceProvider serviceProvider)
         {
@@ -41,16 +38,6 @@ namespace WhenDoJobs.Core.Services
             services.AddTransient<T>();
             serviceProvider = services.BuildServiceProvider();
             commandHandlers.Add(type, typeof(T));
-        }
-
-        public void RegisterJob(IWhenDoJob job)
-        {
-            jobs.Add(job);
-        }
-
-        public void ClearJobRegister()
-        {
-            jobs.Clear();
         }
 
         public void RegisterConditionProvider(string name, Type type)

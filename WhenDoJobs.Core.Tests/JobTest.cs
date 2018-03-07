@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Hangfire;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Linq.Dynamic.Core.Exceptions;
 using System.Text;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Models;
+using WhenDoJobs.Core.Persistence;
 using WhenDoJobs.Core.Providers;
 using WhenDoJobs.Core.Services;
 using WhenDoJobs.Core.Tests.Helpers;
@@ -21,9 +23,10 @@ namespace WhenDoJobs.Core.Tests
             var dtpMock = MockHelper.CreateDateTimeProviderMock();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
 
-            var jobExecutor = new Mock<IWhenDoJobExecutor>();
             var registry = new Mock<IWhenDoRegistry>();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), jobExecutor.Object);
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", null);
@@ -41,9 +44,10 @@ namespace WhenDoJobs.Core.Tests
             var dtpMock = MockHelper.CreateDateTimeProviderMock();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(11, 55, 0));
 
-            var jobExecutor = new Mock<IWhenDoJobExecutor>();
             var registry = new Mock<IWhenDoRegistry>();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), jobExecutor.Object);
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", null);
@@ -60,9 +64,10 @@ namespace WhenDoJobs.Core.Tests
             var dtpMock = MockHelper.CreateDateTimeProviderMock();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
 
-            var jobExecutor = new Mock<IWhenDoJobExecutor>();
             var registry = new Mock<IWhenDoRegistry>();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), jobExecutor.Object);
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression("true", null);
@@ -87,9 +92,10 @@ namespace WhenDoJobs.Core.Tests
             var dtpMock = new Mock<IDateTimeProvider>();
             dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
 
-            var jobExecutor = new Mock<IWhenDoJobExecutor>();
             var registry = new Mock<IWhenDoRegistry>();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), jobExecutor.Object);
+            var hangfire = new Mock<IBackgroundJobClient>();
+            var repository = new MemoryJobRepository();
+            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var condition = "TestMessage.DoubleValue > 15.3 AND TestMessage.StringValue = \"Livingroom\"";
             

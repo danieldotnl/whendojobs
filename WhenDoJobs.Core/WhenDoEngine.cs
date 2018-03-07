@@ -26,10 +26,12 @@ namespace WhenDoJobs.Core
         private BackgroundJobServer hangfireServer;
         private JobStorage hangfireStorage;
         private IWhenDoJobManager jobManager;
+        private IWhenDoRepository<IWhenDoJob> jobRepository;
 
-        public WhenDoEngine(IWhenDoQueueProvider queue, IServiceProvider serviceProvider, IWhenDoJobManager jobManager,
-            ILogger<WhenDoEngine> logger,IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
+        public WhenDoEngine(IWhenDoQueueProvider queue, IServiceProvider serviceProvider, IWhenDoJobManager jobManager, IWhenDoRepository<IWhenDoJob> jobRepository,
+            ILogger<WhenDoEngine> logger, IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
         {
+            this.jobRepository = jobRepository;
             this.queue = queue;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
@@ -66,16 +68,18 @@ namespace WhenDoJobs.Core
                 if (queue.GetMessage(out IWhenDoMessage message))
                 {
                     logger.LogTrace("Message received", message);
-                    await jobManager.Handle(message);
+                    await jobManager.HandleAsync(message);
                     continue;
                 }
-                await Task.Delay(1000);
+                await Task.Delay(5000); //TODO: Replace by setting
             }
             if (hangfireServer != null)
             {
                 hangfireServer.Dispose();
             }
         }
+
+
 
         private void RegisterConditionProviders()
         {
@@ -101,19 +105,63 @@ namespace WhenDoJobs.Core
             }
         }
 
-        public void RegisterJob(JobDefinition jobDefinition)
+        public async Task RegisterJobAsync(JobDefinition jobDefinition)
         {
             try
             {
-                var providers = GetProviders(jobDefinition.Providers);
-                //var type = registry.GetConditionProviderType(jobDefinition.Context);
-                registry.RegisterJob(jobDefinition.ToJob(providers));
+                var job = CreateJobFromDefinition(jobDefinition);
+                await RegisterJobAsync(job);
             }
             catch(Exception ex)
             {
                 logger.LogError(ex, $"Could not register job {jobDefinition.Id}");
                 throw;
             }
+        }
+
+        public async Task RegisterJobAsync(IWhenDoJob job)
+        {
+            try
+            {
+                await jobRepository.SaveAsync(job);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Could not register job {job.Id}");
+                throw;
+            }
+        }
+
+        public virtual IWhenDoJob CreateJobFromDefinition(JobDefinition definition)
+        {
+            var providers = GetProviders(definition.Providers);
+            
+            var job = new WhenDoJob()
+            {
+                Id = definition.Id,
+                Version = definition.Version,
+                Disabled = definition.Disabled,
+                DisabledFrom = definition.DisabledFrom,
+                DisabledTill = definition.DisabledTill,
+                ConditionProviders = GetProviderNames(definition.Providers),
+
+                Condition = WhenDoHelpers.ParseExpression(definition.When, providers),
+                Commands = definition.Do.Select(x => x.ToCommand()).ToList()
+            };
+            return job;
+        }        
+
+        private static List<string> GetProviderNames(List<string> providerDefs)
+        {
+            var names = new List<string>();
+            foreach (var prov in providerDefs)
+            {
+                if (prov.Contains('='))
+                    names.Add(prov.Split('=')[1]);
+                else
+                    names.Add(prov);
+            }
+            return names;
         }
 
         private Dictionary<string, Type> GetProviders(List<string> providerList)
@@ -139,9 +187,9 @@ namespace WhenDoJobs.Core
             registry.RegisterCommandHandler<T>(type);
         }
 
-        public void ClearJobRegister()
+        public async Task ClearJobsAsync()
         {
-            registry.ClearJobRegister();
+            await jobRepository.RemoveAllAsync();
         }
     }
 }

@@ -7,6 +7,7 @@ namespace WhenDoJobs.Core.Interfaces
 {
     public interface IWhenDoCommand
     {
+        string Id { get; set; }
         string Type { get; set; }
         string MethodName { get; set; }
         Dictionary<string, object> Parameters { get; set; }
