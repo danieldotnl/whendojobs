@@ -65,21 +65,28 @@ namespace WhenDoJobs.Core
             logger.LogInformation("Start listing to queue");
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (queue.GetMessage(out IWhenDoMessage message))
+                try
                 {
-                    logger.LogTrace("Message received", message);
-                    await jobManager.HandleAsync(message);
-                    continue;
+                    if (queue.GetMessage(out IWhenDoMessage message))
+                    {
+                        logger.LogTrace("Message received", message);
+                        await jobManager.HandleAsync(message);
+                        continue;
+                    }
+                    await jobManager.HeartBeatAsync();
+                    await Task.Delay(5000); //TODO: Replace by setting
                 }
-                await Task.Delay(5000); //TODO: Replace by setting
+                catch(Exception ex)
+                {
+                    logger.LogCritical(ex, "Critical error in WhenDoEngine. Stopped running jobs.");
+                    throw;
+                }
             }
             if (hangfireServer != null)
             {
                 hangfireServer.Dispose();
             }
         }
-
-
 
         private void RegisterConditionProviders()
         {
@@ -123,6 +130,8 @@ namespace WhenDoJobs.Core
         {
             try
             {
+                if(job.Schedule != null)
+                    job.SetNextRun(DateTimeOffset.Now);
                 await jobRepository.SaveAsync(job);
             }
             catch (Exception ex)
@@ -144,7 +153,8 @@ namespace WhenDoJobs.Core
                 DisabledFrom = definition.DisabledFrom,
                 DisabledTill = definition.DisabledTill,
                 ConditionProviders = GetProviderNames(definition.Providers),
-
+                Schedule =  definition.Schedule.ToWhenDoSchedule(),
+                Type = (definition.Schedule == null) ? JobType.Message : JobType.Scheduled,
                 Condition = WhenDoHelpers.ParseExpression(definition.When, providers),
                 Commands = definition.Do.Select(x => x.ToCommand()).ToList()
             };

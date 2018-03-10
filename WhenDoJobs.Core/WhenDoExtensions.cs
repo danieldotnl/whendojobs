@@ -45,6 +45,80 @@ namespace WhenDoJobs.Core
             return command;
         }
 
+        public static Dictionary<DayOfWeek, List<TimeSpan>> ToWhenDoSchedule(this List<ScheduleDefinition> definitions)
+        {
+            if (definitions == null || definitions.Count == 0)
+                return null;
+            var schedule = new Dictionary<DayOfWeek, List<TimeSpan>>();
+
+            foreach (var definition in definitions)
+            {
+                var times = StringsToTimespans(definition.TimesOfDay);
+                var days = definition.Days.Distinct().ToDaysOfWeek();
+                foreach (var day in days)
+                {
+                    if (!schedule.ContainsKey(day))
+                        schedule.Add(day, new List<TimeSpan>());
+                    schedule[day].AddRange(times);
+                }
+            }
+
+            return schedule;
+        }
+
+        public static List<TimeSpan> StringsToTimespans(List<string> timesOfDay)
+        {
+            var list = new List<TimeSpan>();
+            foreach (var time in timesOfDay)
+            {
+                list.Add(TimeSpan.Parse(time));
+            }
+            return list;
+        }
+
+        public static List<DayOfWeek> ToDaysOfWeek(this IEnumerable<string> dayStrings)
+        {
+            var days = new List<DayOfWeek>();
+            foreach (var dayString in dayStrings)
+            {
+                if (String.IsNullOrEmpty(dayString) || dayString.ToLower().Equals("none"))
+                    continue;
+
+                else if (dayString.ToLower().Equals("any") || dayString.ToLower().Equals("all"))
+                    days.AddRange(Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>());
+
+                else if(dayString.ToLower().Equals("weekend"))
+                    days.AddRange(new[] { DayOfWeek.Saturday, DayOfWeek.Sunday });
+
+                else
+                    days.Add(dayString.ToDayOfWeek());                 
+            }
+            return days;
+        }
+
+        public static DayOfWeek ToDayOfWeek(this string dayString)
+        {
+            var success = Enum.TryParse<DayOfWeek>(dayString, out DayOfWeek day);
+            if (!success)
+                throw new ArgumentException("Days in job schedule invalid");
+            return day;
+        }
+
+        public static WhenDoDays ConvertStringToWhenDoDays(List<string> days)
+        {
+            var convertedDays = WhenDoDays.None;
+            var filterDays = days.Distinct();
+            foreach (var day in filterDays)
+            {
+                var success = Enum.TryParse<WhenDoDays>(day, out WhenDoDays convDay);
+                if (!success)
+                    throw new ArgumentException("Days in job schedule invalid");
+                else
+                    convertedDays = convertedDays | convDay;
+            }
+            return convertedDays;
+        }
+
         public static ExecutionStrategy ToExecutionStrategy(this ExecutionStrategyDefinition definition)
         {
             return new ExecutionStrategy()
@@ -52,6 +126,29 @@ namespace WhenDoJobs.Core
                 Mode = definition.Mode,
                 Time = definition.Time
             };
+        }
+
+        public static WhenDoDays ToWhenDoDays(this DayOfWeek systemDay)
+        {
+            switch (systemDay)
+            {
+                case DayOfWeek.Friday:
+                    return WhenDoDays.Friday;
+                case DayOfWeek.Monday:
+                    return WhenDoDays.Monday;
+                case DayOfWeek.Saturday:
+                    return WhenDoDays.Saturday;
+                case DayOfWeek.Sunday:
+                    return WhenDoDays.Sunday;
+                case DayOfWeek.Thursday:
+                    return WhenDoDays.Thursday;
+                case DayOfWeek.Tuesday:
+                    return WhenDoDays.Tuesday;
+                case DayOfWeek.Wednesday:
+                    return WhenDoDays.Wednesday;
+                default:
+                    throw new ArgumentException();
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WhenDoJobs.Core.Interfaces;
+using WhenDoJobs.Core.Models;
 
 namespace WhenDoJobs.Core.Services
 {
@@ -17,7 +18,7 @@ namespace WhenDoJobs.Core.Services
         private IWhenDoRepository<IWhenDoJob> jobRepository;
         private IBackgroundJobClient hangfireClient;
 
-        public WhenDoJobManager(IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry, 
+        public WhenDoJobManager(IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry,
             ILogger<WhenDoJobManager> logger, IWhenDoRepository<IWhenDoJob> jobRepository, IBackgroundJobClient hangfireClient)
         {
             this.hangfireClient = hangfireClient;
@@ -31,35 +32,54 @@ namespace WhenDoJobs.Core.Services
         {
             try
             {
-                var jobs = await jobRepository.GetAllAsync();
-                var executableJobs = jobs.Where(x => IsRunnable(x, message)).ToList();
+                var jobs = await jobRepository.Get(x => x.Type == JobType.Message && IsRunnable(x, message));
 
-                if (executableJobs.Count() > 0)
-                {
-                    //TODO: changeserviceProvider.GetRequiredService<IWhenDoJobExecutor>();
-                    //TODO: foreachasync extension method??
-                    executableJobs.ForEach(job => ExecuteJob(job, message));
-                }
+                if (jobs.Any())
+                    ExecuteJobOnThreadPool(jobs, message);
                 else
                     logger.LogInformation("No jobs to be executed for message {message}", message);
             }
             catch (Exception ex)
             {
-                logger.LogError("Error processing queue message: {error}", ex, message);
+                logger.LogError(ex, "Error processing queue message: {error}", message);
+            }
+        }
+
+        private void ExecuteJobOnThreadPool(IEnumerable<IWhenDoJob> jobs, IWhenDoMessage message)
+        {
+            try
+            {
+                Task.Run(() =>
+                {
+                    foreach (var job in jobs)
+                    {
+                        ExecuteJob(job, message);
+                    }
+                });
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Something went wrong in Threadpool thread when executing jobs {String.Join(',', jobs.Select(x => x.Id))}");
             }
         }
 
         public async Task HeartBeatAsync()
         {
-            var time = dtp.Now;
+            var now = dtp.Now;
+            var jobs = await jobRepository.Get(x => x.Type == JobType.Scheduled && IsRunnable(x, null) && x.ShouldRun(now));
 
-            //select jobs with next run time > time - settings.heartbeatinterval * 2
-            //check last run date
-
+            if (jobs.Any())
+                ExecuteJobOnThreadPool(jobs, null);
         }
 
         public void ExecuteJob(IWhenDoJob job, IWhenDoMessage context)
         {
+            if(job.Type == JobType.Scheduled)
+                job.SetNextRun(dtp.Now);
+            job.LastRun = dtp.Now;
+            jobRepository.SaveAsync(job);
+
             foreach (var command in job.Commands)
             {
                 try
@@ -74,12 +94,14 @@ namespace WhenDoJobs.Core.Services
                         case ExecutionMode.Default:
                         case ExecutionMode.Reliable:
                             hangfireClient.Enqueue<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id));
+                            logger.LogInformation($"Set command {command.Type} for immediate execution");
                             break;
                         case ExecutionMode.Delayed:
                             hangfireClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id), command.ExecutionStrategy.Time);
+                            logger.LogInformation($"Delayed command {command.Type} with {command.ExecutionStrategy.Time.ToString()}");
                             break;
                         case ExecutionMode.Scheduled:
-                            var today = DateTime.Today;
+                            var today = DateTimeOffset.Now.Date;
                             var time = command.ExecutionStrategy.Time;
                             var executionTime = (today + time > DateTime.Now) ? today + time : today.AddDays(1) + time;
                             hangfireClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id), executionTime);
@@ -117,7 +139,7 @@ namespace WhenDoJobs.Core.Services
             var providers = new List<IWhenDoConditionProvider>();
             foreach (var cp in conditionProviders)
             {
-                if (cp.Equals(message.GetType().Name))
+                if (message != null && cp.Equals(message.GetType().Name))
                     providers.Add(message);
                 else
                 {

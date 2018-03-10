@@ -8,5 +8,6 @@ namespace WhenDoJobs.Core.Interfaces
     public interface IWhenDoJobManager
     {
         Task HandleAsync(IWhenDoMessage message);
+        Task HeartBeatAsync();
     }
 }

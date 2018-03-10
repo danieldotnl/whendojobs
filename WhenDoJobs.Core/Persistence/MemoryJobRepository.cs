@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using WhenDoJobs.Core.Interfaces;
@@ -33,6 +34,12 @@ namespace WhenDoJobs.Core.Persistence
         {
             collection.AddOrUpdate(job.Id, job, (key, value) => {return job; });
             return Task.CompletedTask;
+        }
+
+        public Task<IEnumerable<IWhenDoJob>> Get(Expression<Func<IWhenDoJob, bool>> predicate)
+        {
+            var result = collection.Values.Where(predicate.Compile());
+            return Task.FromResult(result);
         }
     }
 }

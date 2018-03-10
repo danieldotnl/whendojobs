@@ -1,0 +1,32 @@
+﻿{
+  "id": "SwitchOffLightSchedule",
+  "version": 1,
+  "disabled": false,
+  "providers": [ "dtp=DateTime" ],
+  "when": "dtp.CurrentTime > \"10:00\"",
+  "schedule": [
+    {
+      "days": [ "any" ],
+      "timesOfDay": [ "00:30", "11:18", "15:00", "22:00" ]
+    },
+    {
+      "days": [ "Saturday" ],
+      "timesOfDay": [ "11:18", "11:19", "11:20" ]
+    },
+    {
+      "days": [ "Sunday" ],
+      "timesOfDay": [ "22:30" ]
+    }
+  ],
+  "do": [
+    {
+      "type": "PhilipsHue",
+      "command": "SwitchOn",
+      "area": "Living room",
+      "execution": {
+        "mode": "delayed",
+        "time": "00:02"
+      }
+    }
+  ]
+}

@@ -19,7 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="sample-conf.json">
+    <None Update="message-job.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="recurring-job.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

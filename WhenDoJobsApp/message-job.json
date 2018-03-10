@@ -1,7 +1,7 @@
 {
 	"id": "TemperatureBetween15and20",
 	"version": 1,
-	"disabledFrom": "10:00:00",
+	"disabledFrom": "20:59:00",
 	"disabledTill": "21:00:00",
 	"disabled": false,
 	"providers": ["msg=TemperatureMessage", "dtp=DateTime"],

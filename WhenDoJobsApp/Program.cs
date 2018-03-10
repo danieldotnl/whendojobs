@@ -24,12 +24,18 @@ namespace WhenDoJobsApp
                   .CreateLogger();
 
             IServiceProvider serviceProvider = ConfigureServices();
-
-            var path = @".\sample-conf.json";
-            var newjob = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(path));
-
             var engine = serviceProvider.GetRequiredService<IWhenDoEngine>();
-            engine.RegisterJobAsync(newjob);
+
+
+            var file = @".\message-job.json";
+            var job = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(file));
+            engine.RegisterJobAsync(job);
+
+
+            var file2 = @".\recurring-job.json";
+            var job2 = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(file2));
+            engine.RegisterJobAsync(job2);
+            
             engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
 
             var ct = new CancellationToken();

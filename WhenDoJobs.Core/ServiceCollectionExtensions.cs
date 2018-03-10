@@ -22,8 +22,7 @@ namespace WhenDoJobs.Core
             var config = new WhenDoConfiguration();
             setupAction?.Invoke(config);
 
-            services.AddSingleton<IServiceCollection>(services);
-
+            services.AddSingleton<IServiceCollection>(services); //TODO: remove this
             services.AddTransient<JobStorage>(config.HangfireStorageFactory);
             services.AddSingleton<WhenDoConfiguration>(config);
             services.AddSingleton<IWhenDoQueueProvider>(config.QueueFactory);
@@ -33,16 +32,8 @@ namespace WhenDoJobs.Core
             services.AddSingleton<IWhenDoEngine, WhenDoEngine>();
             services.AddSingleton<IWhenDoRepository<IWhenDoJob>>(config.JobRepositoryFactory);
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-            //services.AddTransient<IWhenDoJobExecutor, WhenDoJobExecutor>();
             services.AddTransient<IWhenDoCommandExecutor, WhenDoCommandExecutor>();
             services.AddSingleton<IWhenDoRegistry, WhenDoRegistry>();
-
-            //JobStorage.Current = config.HangfireStorageFactory()
-
-            //register default handlers
-            //var provider = services.BuildServiceProvider();
-            //var engine = provider.GetRequiredService<IWhenDoEngine>();
-            //engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
         }
     }
 }
