@@ -104,21 +104,6 @@ namespace WhenDoJobs.Core
             return day;
         }
 
-        public static WhenDoDays ConvertStringToWhenDoDays(List<string> days)
-        {
-            var convertedDays = WhenDoDays.None;
-            var filterDays = days.Distinct();
-            foreach (var day in filterDays)
-            {
-                var success = Enum.TryParse<WhenDoDays>(day, out WhenDoDays convDay);
-                if (!success)
-                    throw new ArgumentException("Days in job schedule invalid");
-                else
-                    convertedDays = convertedDays | convDay;
-            }
-            return convertedDays;
-        }
-
         public static ExecutionStrategy ToExecutionStrategy(this ExecutionStrategyDefinition definition)
         {
             return new ExecutionStrategy()
@@ -126,29 +111,6 @@ namespace WhenDoJobs.Core
                 Mode = definition.Mode,
                 Time = definition.Time
             };
-        }
-
-        public static WhenDoDays ToWhenDoDays(this DayOfWeek systemDay)
-        {
-            switch (systemDay)
-            {
-                case DayOfWeek.Friday:
-                    return WhenDoDays.Friday;
-                case DayOfWeek.Monday:
-                    return WhenDoDays.Monday;
-                case DayOfWeek.Saturday:
-                    return WhenDoDays.Saturday;
-                case DayOfWeek.Sunday:
-                    return WhenDoDays.Sunday;
-                case DayOfWeek.Thursday:
-                    return WhenDoDays.Thursday;
-                case DayOfWeek.Tuesday:
-                    return WhenDoDays.Tuesday;
-                case DayOfWeek.Wednesday:
-                    return WhenDoDays.Wednesday;
-                default:
-                    throw new ArgumentException();
-            }
         }
     }
 }

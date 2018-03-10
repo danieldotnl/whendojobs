@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WhenDoJobs.Core.Interfaces;
 
-namespace WhenDoJobs.Core.Interfaces
+namespace WhenDoJobsApp
 {
     public interface ILoggingCommandHandler : IWhenDoCommandHandler
     {

@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using WhenDoJobs.Core.Interfaces;
 
-namespace WhenDoJobs.Core.Services
+namespace WhenDoJobs.Core.Persistence
 {
-    public class InMemoryQueueProvider : IInMemoryQueueProvider
+    public class MemoryQueueProvider : IMemoryQueueProvider
     {
         private ConcurrentQueue<IWhenDoMessage> queue = new ConcurrentQueue<IWhenDoMessage>();
 

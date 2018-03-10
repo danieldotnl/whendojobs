@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface IWhenDoJobRepository : IWhenDoRepository<IWhenDoJob>
+    interface IMemoryQueueProvider : IWhenDoQueueProvider
     {
-
+             
     }
 }

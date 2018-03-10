@@ -25,7 +25,7 @@ namespace WhenDoJobs.Core
             QueueFactory = new Func<IServiceProvider, IWhenDoQueueProvider>(sp =>
             {
                 if (queueProvider == null)
-                    queueProvider = new InMemoryQueueProvider();
+                    queueProvider = new MemoryQueueProvider();
                 return queueProvider;
             });
 
