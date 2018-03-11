@@ -67,11 +67,10 @@ namespace WhenDoJobs.Core
             {
                 try
                 {
-                    if (queue.GetMessage(out IWhenDoMessage message))
+                    while (queue.GetMessage(out IWhenDoMessage message))
                     {
                         logger.LogTrace("Message received", message);
                         await jobManager.HandleAsync(message);
-                        continue;
                     }
                     await jobManager.HeartBeatAsync();
                     await Task.Delay(5000); //TODO: Replace by setting

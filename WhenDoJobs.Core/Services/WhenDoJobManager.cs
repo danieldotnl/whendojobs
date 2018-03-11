@@ -35,7 +35,12 @@ namespace WhenDoJobs.Core.Services
                 var jobs = await jobRepository.Get(x => x.Type == JobType.Message && IsRunnable(x, message));
 
                 if (jobs.Any())
-                    ExecuteJobOnThreadPool(jobs, message);
+                {
+                    foreach (var job in jobs)
+                    {
+                        ExecuteJob(job, message);
+                    }
+                }
                 else
                     logger.LogInformation("No jobs to be executed for message {message}", message);
             }
@@ -45,32 +50,18 @@ namespace WhenDoJobs.Core.Services
             }
         }
 
-        private void ExecuteJobOnThreadPool(IEnumerable<IWhenDoJob> jobs, IWhenDoMessage message)
-        {
-            try
-            {
-                Task.Run(() =>
-                {
-                    foreach (var job in jobs)
-                    {
-                        ExecuteJob(job, message);
-                    }
-                });
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Something went wrong in Threadpool thread when executing jobs {String.Join(',', jobs.Select(x => x.Id))}");
-            }
-        }
-
         public async Task HeartBeatAsync()
         {
             var now = dtp.Now;
             var jobs = await jobRepository.Get(x => x.Type == JobType.Scheduled && IsRunnable(x, null) && x.ShouldRun(now));
 
             if (jobs.Any())
-                ExecuteJobOnThreadPool(jobs, null);
+            {
+                foreach (var job in jobs)
+                {
+                    ExecuteJob(job, null);
+                }
+            }
         }
 
         public void ExecuteJob(IWhenDoJob job, IWhenDoMessage context)
