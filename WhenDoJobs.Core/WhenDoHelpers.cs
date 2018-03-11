@@ -11,21 +11,23 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoHelpers
     {
-        public static Delegate ParseExpression(string condition, Dictionary<string, Type> providers)
+        public static Delegate ParseExpression<T>(string condition, Dictionary<string, Type> availableProviders)
         {
             if (string.IsNullOrEmpty(condition))
                 condition = "true";
 
             var parameters = new List<ParameterExpression>();
+            var requiredProviders = condition.ExtractProviders();
 
-            if (providers != null)
+            if(requiredProviders != null)
             {
-                foreach (var provider in providers)
+                foreach (var requiredProvider in requiredProviders)
                 {
-                    parameters.Add(Expression.Parameter(provider.Value, provider.Key));
+                    parameters.Add(Expression.Parameter(availableProviders[requiredProvider], requiredProvider));
                 }
             }
-            var e = DynamicExpressionParser.ParseLambda(parameters.ToArray(), typeof(bool), condition);
+
+            var e = DynamicExpressionParser.ParseLambda(parameters.ToArray(), typeof(T), condition.Replace("@", String.Empty));
             return e.Compile();
         }
     }

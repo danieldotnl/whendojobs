@@ -154,7 +154,7 @@ namespace WhenDoJobs.Core
                 ConditionProviders = GetProviderNames(definition.Providers),
                 Schedule =  definition.Schedule.ToWhenDoSchedule(),
                 Type = (definition.Schedule == null) ? JobType.Message : JobType.Scheduled,
-                Condition = WhenDoHelpers.ParseExpression(definition.When, providers),
+                Condition = WhenDoHelpers.ParseExpression<bool>(definition.When, providers),
                 Commands = definition.Do.Select(x => x.ToCommand()).ToList()
             };
             return job;

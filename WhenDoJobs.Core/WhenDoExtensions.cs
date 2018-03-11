@@ -10,28 +10,6 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
-        {
-            if (dictionary == null) { throw new ArgumentNullException(nameof(dictionary)); }
-            if (key == null) { throw new ArgumentNullException(nameof(key)); }
-
-            return dictionary.TryGetValue(key, out TValue value) ? value : defaultValue;
-        }
-
-        public static MethodInfo GetMethod(this Type type, string name, bool generic)
-        {
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-            if (String.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException("name");
-            }
-            return type.GetMethods()
-                .FirstOrDefault(method => method.Name == name & method.IsGenericMethod == generic);
-        }
-
         public static IWhenDoCommand ToCommand(this CommandDefinition definition)
         {
             var command = new WhenDoCommand()
@@ -111,6 +89,35 @@ namespace WhenDoJobs.Core
                 Mode = definition.Mode,
                 Time = definition.Time
             };
+        }
+
+        public static IEnumerable<string> ExtractProviders(this string expression)
+        {
+            var providers = new List<string>();
+            var parts = expression.Split('@');
+            for (int i = 1; i < parts.Length; i++)
+            {
+                var pos = parts[i].IndexOf<char>(c => !char.IsLetterOrDigit(c));
+                if (pos != -1)
+                    providers.Add(parts[i].Substring(0, pos));
+                else
+                    providers.Add(parts[i]);
+            }
+            return providers.Distinct();
+        }
+
+        public static int IndexOf<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+        {
+            int i = 0;
+
+            foreach (TSource element in source)
+            {
+                if (predicate(element))
+                    return i;
+                i++;
+            }
+
+            return -1;
         }
     }
 }

@@ -7,10 +7,10 @@ namespace WhenDoJobs.Core.Providers
 {
     public class DateTimeProvider : IDateTimeProvider, IWhenDoConditionProvider
     {
-        public TimeSpan CurrentTime => DateTimeOffset.Now.TimeOfDay;
+        public virtual TimeSpan CurrentTime => DateTimeOffset.Now.TimeOfDay;
 
-        public DateTimeOffset Now => DateTimeOffset.Now;
+        public virtual DateTimeOffset Now => DateTimeOffset.Now;
 
-        public string Id => "DateTime";
+        public virtual string Id => "DateTime";
     }
 }

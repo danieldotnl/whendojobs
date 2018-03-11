@@ -29,7 +29,7 @@ namespace WhenDoJobs.Core.Tests
             var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
-            job.Condition = WhenDoHelpers.ParseExpression("true", null);
+            job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
 
             job.Disabled = true;
             Assert.IsFalse(manager.IsRunnable(job, null));
@@ -50,7 +50,7 @@ namespace WhenDoJobs.Core.Tests
             var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
-            job.Condition = WhenDoHelpers.ParseExpression("true", null);
+            job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
             job.DisabledFrom = new TimeSpan(10, 0, 0);
             job.DisabledTill = new TimeSpan(14, 0, 0);
 
@@ -70,7 +70,7 @@ namespace WhenDoJobs.Core.Tests
             var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
-            job.Condition = WhenDoHelpers.ParseExpression("true", null);
+            job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
             job.DisabledFrom = new TimeSpan(10, 0, 0);
             job.DisabledTill = new TimeSpan(14, 0, 0);
 
@@ -83,26 +83,31 @@ namespace WhenDoJobs.Core.Tests
         {
             var condition = "TestMessage.DoubleValue > 15.3 AND TestMessage.StringValue = \"Livingroom\" AND dtp.CurrentTime > \"10:00\"";
 
-            Assert.ThrowsException<ParseException>(() => WhenDoHelpers.ParseExpression(condition, new Dictionary<string, Type>() { { "TestMessage", typeof(TestMessage) } }));
+            Assert.ThrowsException<ParseException>(() => WhenDoHelpers.ParseExpression<bool>(condition, new Dictionary<string, Type>() { { "TestMessage", typeof(TestMessage) } }));
         }
 
         [TestMethod]
         public void TestConditionEvaluation()
         {
-            var dtpMock = new Mock<IDateTimeProvider>();
-            dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
+            var dtpMock = new Mock<DateTimeProvider>();
+            dtpMock.Setup(x => x.CurrentTime).Returns(new TimeSpan(23, 55, 0));
+
+            var dtpMock2 = new Mock<IDateTimeProvider>();
+            dtpMock2.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
 
             var registry = new Mock<IWhenDoRegistry>();
+            registry.Setup(x => x.GetConditionProvider("DatetimeProvider")).Returns(dtpMock.As<IWhenDoConditionProvider>().Object);
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            var manager = new WhenDoJobManager(dtpMock2.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
 
-            var condition = "TestMessage.DoubleValue > 15.3 AND TestMessage.StringValue = \"Livingroom\"";
+            var condition = "@msg.DoubleValue > 15.3 AND @msg.StringValue = \"Livingroom\" AND @dtp.CurrentTime > \"23:00\"";
             
             var job = new WhenDoJob();
-            job.ConditionProviders = new List<string>() { "TestMessage" };
-            job.Condition = WhenDoHelpers.ParseExpression(condition, new Dictionary<string, Type>() {
-                { "TestMessage", typeof(TestMessage) }
+            job.ConditionProviders = new List<string>() { "TestMessage", "DatetimeProvider" };
+            job.Condition = WhenDoHelpers.ParseExpression<bool>(condition, new Dictionary<string, Type>() {
+                { "msg", typeof(TestMessage) },
+                { "dtp", typeof(DateTimeProvider) }
             });
 
             var message = new TestMessage() { DoubleValue = 15.0D, IntValue = 20, StringValue = "Livingroom" };
