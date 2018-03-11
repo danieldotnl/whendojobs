@@ -89,7 +89,7 @@ namespace WhenDoJobs.Core
 
         private void RegisterConditionProviders()
         {
-            var providerInterface = typeof(IWhenDoConditionProvider);
+            var providerInterface = typeof(IWhenDoExpressionProvider);
 
             var assembly = Assembly.GetEntryAssembly();
             var assemblies = new List<AssemblyName>(assembly.GetReferencedAssemblies());
@@ -106,7 +106,7 @@ namespace WhenDoJobs.Core
                         name = type.Name.Substring(0, type.Name.Length - 8);
                     else
                         name = type.Name;
-                    registry.RegisterConditionProvider(name, type);
+                    registry.RegisterExpressionProvider(name, type);
                 }
             }
         }
@@ -181,11 +181,11 @@ namespace WhenDoJobs.Core
                 if (prov.Contains('='))
                 {
                     var provPair = prov.Split('=');
-                    providers.Add(provPair[0].Trim(), registry.GetConditionProviderType(provPair[1].Trim()));
+                    providers.Add(provPair[0].Trim(), registry.GetExpressionProviderType(provPair[1].Trim()));
                 }
                 else
                 {
-                    providers.Add(prov, registry.GetConditionProviderType(prov.Trim()));
+                    providers.Add(prov, registry.GetExpressionProviderType(prov.Trim()));
                 }
             }
             return providers;

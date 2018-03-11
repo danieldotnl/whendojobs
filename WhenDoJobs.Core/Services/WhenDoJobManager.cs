@@ -118,23 +118,23 @@ namespace WhenDoJobs.Core.Services
                     return false;
             }
 
-            var providers = CollectConditionProviders(job.ConditionProviders, message);
+            var providers = GetExpressionProviderInstances(job.ConditionProviders, message);
 
             if (!(bool)job.Condition.DynamicInvoke(providers.ToArray()))
                 return false;
             return true;
         }
 
-        private List<IWhenDoConditionProvider> CollectConditionProviders(List<string> conditionProviders, IWhenDoMessage message)
+        private List<IWhenDoExpressionProvider> GetExpressionProviderInstances(List<string> expressionProviders, IWhenDoMessage message)
         {
-            var providers = new List<IWhenDoConditionProvider>();
-            foreach (var cp in conditionProviders)
+            var providers = new List<IWhenDoExpressionProvider>();
+            foreach (var cp in expressionProviders)
             {
                 if (message != null && cp.Equals(message.GetType().Name))
                     providers.Add(message);
                 else
                 {
-                    providers.Add(registry.GetConditionProvider(cp));
+                    providers.Add(registry.GetExpressionProvider(cp));
                 }
 
             }

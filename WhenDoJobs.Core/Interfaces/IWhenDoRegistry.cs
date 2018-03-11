@@ -8,8 +8,8 @@ namespace WhenDoJobs.Core.Interfaces
     {
         void RegisterCommandHandler<TCommand>(string type) where TCommand : class, IWhenDoCommandHandler;
         IWhenDoCommandHandler GetCommandHandler(string type);
-        void RegisterConditionProvider(string name, Type type);
-        Type GetConditionProviderType(string name);
-        IWhenDoConditionProvider GetConditionProvider(string name);
+        void RegisterExpressionProvider(string name, Type type);
+        Type GetExpressionProviderType(string name);
+        IWhenDoExpressionProvider GetExpressionProvider(string name);
     }
 }

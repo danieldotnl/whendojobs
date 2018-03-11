@@ -5,7 +5,7 @@ using WhenDoJobs.Core.Interfaces;
 
 namespace WhenDoJobs.Core.Providers
 {
-    public class DateTimeProvider : IDateTimeProvider, IWhenDoConditionProvider
+    public class DateTimeProvider : IDateTimeProvider, IWhenDoExpressionProvider
     {
         public virtual TimeSpan CurrentTime => DateTimeOffset.Now.TimeOfDay;
 

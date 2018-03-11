@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WhenDoJobs.Core.Interfaces
 {
-    public interface IWhenDoConditionProvider
+    public interface IWhenDoExpressionProvider
     {
         //string Id { get; }
     }

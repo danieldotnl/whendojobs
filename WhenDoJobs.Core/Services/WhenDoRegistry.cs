@@ -13,7 +13,7 @@ namespace WhenDoJobs.Core.Services
         private IServiceCollection services;
         private IServiceProvider serviceProvider;
         private Dictionary<string, Type> commandHandlers = new Dictionary<string, Type>();
-        private Dictionary<string, Type> conditionProviders = new Dictionary<string, Type>();
+        private Dictionary<string, Type> expressionProviders = new Dictionary<string, Type>();
 
         public WhenDoRegistry(IServiceCollection services, IServiceProvider serviceProvider)
         {
@@ -40,29 +40,29 @@ namespace WhenDoJobs.Core.Services
             commandHandlers.Add(type, typeof(T));
         }
 
-        public void RegisterConditionProvider(string name, Type type)
+        public void RegisterExpressionProvider(string name, Type type)
         {
             services.AddTransient(type);
             serviceProvider = services.BuildServiceProvider();
-            conditionProviders.Add(name, type);
+            expressionProviders.Add(name, type);
         }
 
-        public Type GetConditionProviderType(string name)
+        public Type GetExpressionProviderType(string name)
         {
-            if (conditionProviders.ContainsKey(name))
+            if (expressionProviders.ContainsKey(name))
             {
-                return conditionProviders[name];
+                return expressionProviders[name];
             }
             else
-                throw new ConditionProviderNotRegisteredException("No such condition provider has been registered", name);
+                throw new ExpressionProviderNotRegisteredException("No such expression provider has been registered", name);
         }
 
-        public IWhenDoConditionProvider GetConditionProvider(string name)
+        public IWhenDoExpressionProvider GetExpressionProvider(string name)
         {
-            if (conditionProviders.ContainsKey(name))
-                return (IWhenDoConditionProvider)serviceProvider.GetRequiredService(conditionProviders[name]);
+            if (expressionProviders.ContainsKey(name))
+                return (IWhenDoExpressionProvider)serviceProvider.GetRequiredService(expressionProviders[name]);
             else
-                throw new ConditionProviderNotRegisteredException("No such condition provider has been registered", name);
+                throw new ExpressionProviderNotRegisteredException("No such expression provider has been registered", name);
         }
     }
 }

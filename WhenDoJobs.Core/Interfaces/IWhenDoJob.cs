@@ -17,7 +17,7 @@ namespace WhenDoJobs.Core.Interfaces
         Dictionary<DayOfWeek, List<TimeSpan>> Schedule { get; set; }
         IEnumerable<IWhenDoCommand> Commands { get; set; }
 
-        DateTimeOffset LastRun { get; set; }
+        DateTimeOffset? LastRun { get; set; }
         DateTimeOffset NextRun { get; set; }
 
         bool ShouldRun(DateTimeOffset refTime);

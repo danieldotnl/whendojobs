@@ -20,24 +20,13 @@ namespace WhenDoJobs.Core.Models
         public Dictionary<DayOfWeek, List<TimeSpan>> Schedule { get; set; }
         public IEnumerable<IWhenDoCommand> Commands { get; set; }
 
-        public DateTimeOffset LastRun { get; set; }
+        public DateTimeOffset? LastRun { get; set; }
         public DateTimeOffset NextRun { get; set; }
 
         public bool ShouldRun(DateTimeOffset refTime)
         {
             return NextRun < refTime;
         }
-
-
-
-        //public DateTimeOffset GetNextScheduledDate(DateTimeOffset refDate)
-        //{
-        //    while (!IsScheduled(refDate.DayOfWeek.ToWhenDoDays()))
-        //    {
-        //        refDate.AddDays(1);
-        //    }
-        //    return refDate.Date;
-        //}
 
         public void SetNextRun(DateTimeOffset refDatetime)
         {
@@ -59,33 +48,6 @@ namespace WhenDoJobs.Core.Models
                 if (count > 6)
                     throw new ArgumentOutOfRangeException($"Cannot determine next run datetime within 7 days");
             }
-
-            ///*
-            // * check if nextrun > refdatetime, if so return
-            // * Check if date's day is part of scheduled days
-            // * yes: find any time after current time
-            // * found: set nextrun and stop
-            // * notfound: set refdatetime to next day
-            // */
-
-            //if ((refDatetime.Date - DateTimeOffset.Now).Days > 7)
-            //    throw new ArgumentOutOfRangeException("Cannot determine next run datetime");
-
-            //if (NextRun > refDatetime)
-            //    return;
-
-            //if (IsScheduled(refDatetime.DayOfWeek.ToWhenDoDays()))
-            //{
-            //    foreach (var time in TimesOfDay.Where(x => x > refDatetime.TimeOfDay).OrderBy(x => x))
-            //    {
-            //        if (time > refDatetime.TimeOfDay)
-            //        {
-            //            NextRun = refDatetime.Date + time;
-            //            return;
-            //        }
-            //    }
-            //}
-            //SetNextRun(refDatetime.Date.AddDays(1));
         }
     }
 }
