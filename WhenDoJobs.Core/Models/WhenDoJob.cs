@@ -15,7 +15,7 @@ namespace WhenDoJobs.Core.Models
         public bool Disabled { get; set; }
         public TimeSpan? DisabledFrom { get; set; }
         public TimeSpan? DisabledTill { get; set; }
-        public List<string> ConditionProviders { get; set; } = new List<string>();
+        public List<ExpressionProviderInfo> ConditionProviders { get; set; } = new List<ExpressionProviderInfo>();
         public Delegate Condition { get; set; }
         public Dictionary<DayOfWeek, List<TimeSpan>> Schedule { get; set; }
         public IEnumerable<IWhenDoCommand> Commands { get; set; }

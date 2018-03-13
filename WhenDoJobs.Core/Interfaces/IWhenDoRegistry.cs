@@ -10,6 +10,6 @@ namespace WhenDoJobs.Core.Interfaces
         IWhenDoCommandHandler GetCommandHandler(string type);
         void RegisterExpressionProvider(string name, Type type);
         Type GetExpressionProviderType(string name);
-        IWhenDoExpressionProvider GetExpressionProvider(string name);
+        IWhenDoExpressionProvider GetExpressionProviderInstance(string name);
     }
 }

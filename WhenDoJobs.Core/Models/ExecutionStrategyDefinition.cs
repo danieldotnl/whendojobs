@@ -7,6 +7,6 @@ namespace WhenDoJobs.Core.Models
     public class ExecutionStrategyDefinition
     {
         public ExecutionMode Mode { get; set; }
-        public TimeSpan Time { get; set; }
+        public string Time { get; set; }
     }
 }

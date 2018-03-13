@@ -3,7 +3,7 @@
   "version": 1,
   "disabled": false,
   "providers": [ "dtp=DateTime" ],
-  "when": "dtp.CurrentTime > \"10:00\"",
+  "when": "@dtp.CurrentTime > \"10:00\"",
   "schedule": [
     {
       "days": [ "any" ],

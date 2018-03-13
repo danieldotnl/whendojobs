@@ -26,7 +26,7 @@ namespace WhenDoJobs.Core.Tests
             var registry = new Mock<IWhenDoRegistry>();
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            var manager = new WhenDoJobExecutionManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobExecutionManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
@@ -47,7 +47,7 @@ namespace WhenDoJobs.Core.Tests
             var registry = new Mock<IWhenDoRegistry>();
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            var manager = new WhenDoJobExecutionManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobExecutionManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
@@ -67,7 +67,7 @@ namespace WhenDoJobs.Core.Tests
             var registry = new Mock<IWhenDoRegistry>();
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
-            var manager = new WhenDoJobManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            var manager = new WhenDoJobExecutionManager(dtpMock.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobExecutionManager>(), repository, hangfire.Object);
 
             var job = new WhenDoJob();
             job.Condition = WhenDoHelpers.ParseExpression<bool>("true", null);
@@ -83,7 +83,8 @@ namespace WhenDoJobs.Core.Tests
         {
             var condition = "TestMessage.DoubleValue > 15.3 AND TestMessage.StringValue = \"Livingroom\" AND dtp.CurrentTime > \"10:00\"";
 
-            Assert.ThrowsException<ParseException>(() => WhenDoHelpers.ParseExpression<bool>(condition, new Dictionary<string, Type>() { { "TestMessage", typeof(TestMessage) } }));
+            Assert.ThrowsException<ParseException>(() => WhenDoHelpers.ParseExpression<bool>(condition, new List<ExpressionProviderInfo>() {
+                new ExpressionProviderInfo() { ShortName = "msg", FullName = "TestMessage", ProviderType = typeof(TestMessage) } }));
         }
 
         [TestMethod]
@@ -96,19 +97,18 @@ namespace WhenDoJobs.Core.Tests
             dtpMock2.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
 
             var registry = new Mock<IWhenDoRegistry>();
-            registry.Setup(x => x.GetExpressionProvider("DatetimeProvider")).Returns(dtpMock.As<IWhenDoExpressionProvider>().Object);
+            registry.Setup(x => x.GetExpressionProviderInstance("DatetimeProvider")).Returns(dtpMock.As<IWhenDoExpressionProvider>().Object);
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
-            var manager = new WhenDoJobManager(dtpMock2.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobManager>(), repository, hangfire.Object);
+            var manager = new WhenDoJobExecutionManager(dtpMock2.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobExecutionManager>(), repository, hangfire.Object);
 
             var condition = "@msg.DoubleValue > 15.3 AND @msg.StringValue = \"Livingroom\" AND @dtp.CurrentTime > \"23:00\"";
             
             var job = new WhenDoJob();
-            job.ConditionProviders = new List<string>() { "TestMessage", "DatetimeProvider" };
-            job.Condition = WhenDoHelpers.ParseExpression<bool>(condition, new Dictionary<string, Type>() {
-                { "msg", typeof(TestMessage) },
-                { "dtp", typeof(DateTimeProvider) }
-            });
+            job.ConditionProviders = new List<ExpressionProviderInfo>() {
+                new ExpressionProviderInfo() { ShortName = "msg", FullName = "TestMessage", ProviderType = typeof(TestMessage)},
+                new ExpressionProviderInfo() { ShortName = "dtp", FullName = "DateTime", ProviderType = typeof(DateTimeProvider)} };
+            job.Condition = WhenDoHelpers.ParseExpression<bool>(condition,  job.ConditionProviders);
 
             var message = new TestMessage() { DoubleValue = 15.0D, IntValue = 20, StringValue = "Livingroom" };
             Assert.IsFalse(manager.IsRunnable(job, message));

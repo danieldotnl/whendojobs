@@ -10,18 +10,7 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoExtensions
     {
-        public static IWhenDoCommand ToCommand(this CommandDefinition definition)
-        {
-            var command = new WhenDoCommand()
-            {
-                Id = Guid.NewGuid().ToString("N").ToLower(),
-                Type = definition.Type,
-                MethodName = definition.Command,
-                Parameters = definition.Parameters,
-                ExecutionStrategy = definition.Execution.ToExecutionStrategy()
-            };
-            return command;
-        }
+        
 
         public static Dictionary<DayOfWeek, List<TimeSpan>> ToWhenDoSchedule(this List<ScheduleDefinition> definitions)
         {
@@ -80,18 +69,9 @@ namespace WhenDoJobs.Core
             if (!success)
                 throw new ArgumentException("Days in job schedule invalid");
             return day;
-        }
+        }        
 
-        public static ExecutionStrategy ToExecutionStrategy(this ExecutionStrategyDefinition definition)
-        {
-            return new ExecutionStrategy()
-            {
-                Mode = definition.Mode,
-                Time = definition.Time
-            };
-        }
-
-        public static IEnumerable<string> ExtractProviders(this string expression)
+        public static IEnumerable<string> ExtractProviderShortNames(this string expression)
         {
             var providers = new List<string>();
             var parts = expression.Split('@');
@@ -104,6 +84,19 @@ namespace WhenDoJobs.Core
                     providers.Add(parts[i]);
             }
             return providers.Distinct();
+        }
+
+        public static IEnumerable<string> ExtractProviderFullNames(this Delegate del)
+        {
+            var providerFullNames = new List<string>();
+            var parameters = del.Method.GetParameters().ToList();
+            for (int i = 1; i < parameters.Count(); i++)
+            {
+                var paramName = parameters[i].ParameterType.Name;
+                providerFullNames.Add(paramName);
+            }
+
+            return providerFullNames;
         }
 
         public static int IndexOf<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)

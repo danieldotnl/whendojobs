@@ -57,8 +57,11 @@ namespace WhenDoJobs.Core.Services
                 throw new ExpressionProviderNotRegisteredException("No such expression provider has been registered", name);
         }
 
-        public IWhenDoExpressionProvider GetExpressionProvider(string name)
+        public IWhenDoExpressionProvider GetExpressionProviderInstance(string name)
         {
+            if (name.EndsWith("Provider"))
+                name = name.Substring(0, name.Length - 8);
+
             if (expressionProviders.ContainsKey(name))
                 return (IWhenDoExpressionProvider)serviceProvider.GetRequiredService(expressionProviders[name]);
             else

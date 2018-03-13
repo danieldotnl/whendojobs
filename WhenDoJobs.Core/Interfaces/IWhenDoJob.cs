@@ -12,7 +12,7 @@ namespace WhenDoJobs.Core.Interfaces
         bool Disabled { get; set; }
         TimeSpan? DisabledFrom { get; set; }
         TimeSpan? DisabledTill { get; set; }
-        List<string> ConditionProviders { get; set; }
+        List<ExpressionProviderInfo> ConditionProviders { get; set; }
         Delegate Condition { get; set; }
         Dictionary<DayOfWeek, List<TimeSpan>> Schedule { get; set; }
         IEnumerable<IWhenDoCommand> Commands { get; set; }

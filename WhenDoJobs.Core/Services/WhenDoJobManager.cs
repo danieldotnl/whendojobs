@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,131 +11,118 @@ namespace WhenDoJobs.Core.Services
 {
     public class WhenDoJobManager : IWhenDoJobManager
     {
-        private IDateTimeProvider dtp;
-        private IWhenDoRegistry registry;
         private ILogger<WhenDoJobManager> logger;
         private IWhenDoRepository<IWhenDoJob> jobRepository;
-        private IBackgroundJobClient hangfireClient;
+        private IWhenDoRegistry registry;
 
-        public WhenDoJobManager(IDateTimeProvider dateTimeProvider, IWhenDoRegistry registry,
-            ILogger<WhenDoJobManager> logger, IWhenDoRepository<IWhenDoJob> jobRepository, IBackgroundJobClient hangfireClient)
+        public WhenDoJobManager(ILogger<WhenDoJobManager> logger, IWhenDoRepository<IWhenDoJob> jobRepository, IWhenDoRegistry registry)
         {
-            this.hangfireClient = hangfireClient;
-            this.dtp = dateTimeProvider;
             this.registry = registry;
             this.logger = logger;
             this.jobRepository = jobRepository;
         }
 
-        public async Task HandleAsync(IWhenDoMessage message)
+        public async Task ClearJobsAsync()
+        {
+            await jobRepository.RemoveAllAsync();
+        }
+
+        public async Task RegisterJobAsync(JobDefinition jobDefinition)
         {
             try
             {
-                var jobs = await jobRepository.Get(x => x.Type == JobType.Message && IsRunnable(x, message));
-
-                if (jobs.Any())
-                {
-                    foreach (var job in jobs)
-                    {
-                        ExecuteJob(job, message);
-                    }
-                }
-                else
-                    logger.LogInformation("No jobs to be executed for message {message}", message);
+                var job = CreateJobFromDefinition(jobDefinition);
+                await RegisterJobAsync(job);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error processing queue message: {error}", message);
+                logger.LogError(ex, $"Could not register job {jobDefinition.Id}");
+                throw;
             }
         }
 
-        public async Task HeartBeatAsync()
+        public async Task RegisterJobAsync(IWhenDoJob job)
         {
-            var now = dtp.Now;
-            var jobs = await jobRepository.Get(x => x.Type == JobType.Scheduled && IsRunnable(x, null) && x.ShouldRun(now));
-
-            if (jobs.Any())
+            try
             {
-                foreach (var job in jobs)
+                if (job.Schedule != null)
+                    job.SetNextRun(DateTimeOffset.Now);
+                await jobRepository.SaveAsync(job);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Could not register job {job.Id}");
+                throw;
+            }
+        }
+
+        public virtual IWhenDoJob CreateJobFromDefinition(JobDefinition definition)
+        {
+            var providers = GetProviderInfoList(definition.Providers);
+
+            var job = new WhenDoJob()
+            {
+                Id = definition.Id,
+                Version = definition.Version,
+                Disabled = definition.Disabled,
+                DisabledFrom = definition.DisabledFrom,
+                DisabledTill = definition.DisabledTill,
+                ConditionProviders = providers,
+                Schedule = definition.Schedule.ToWhenDoSchedule(),
+                Type = (definition.Schedule == null) ? JobType.Message : JobType.Scheduled,
+                Condition = WhenDoHelpers.ParseExpression<bool>(definition.When, providers),
+                Commands = definition.Do.Select(x => CreateCommandFromDefinition(x, providers)).ToList()
+            };
+            return job;
+        }
+
+        public IWhenDoCommand CreateCommandFromDefinition(CommandDefinition definition, List<ExpressionProviderInfo> providerInfos)
+        {
+            ExecutionStrategy strategy = null;
+            if (definition.Execution.Mode == ExecutionMode.Default || definition.Execution.Mode == ExecutionMode.Reliable)
+                strategy = new ExecutionStrategy() { Mode = definition.Execution.Mode, Time = null };
+            else
+                strategy = CreateExecutionStrategyFromDefinition(definition.Execution, providerInfos);
+
+            var command = new WhenDoCommand()
+            {
+                Id = Guid.NewGuid().ToString("N").ToLower(),
+                Type = definition.Type,
+                MethodName = definition.Command,
+                Parameters = definition.Parameters,
+                ExecutionStrategy = strategy
+            };
+            return command;
+        }
+
+        public ExecutionStrategy CreateExecutionStrategyFromDefinition(ExecutionStrategyDefinition definition, List<ExpressionProviderInfo> providerInfos)
+        {
+            return new ExecutionStrategy()
+            {
+                Mode = definition.Mode,
+                Time = WhenDoHelpers.ParseExpression<TimeSpan>(definition.Time, providerInfos)
+            };
+        }
+
+        private List<ExpressionProviderInfo> GetProviderInfoList(List<string> providerDefinitions)
+        {
+            var providers = new List<ExpressionProviderInfo>();
+            foreach (var prov in providerDefinitions)
+            {
+                var provider = new ExpressionProviderInfo();
+                if (prov.Contains('='))
                 {
-                    ExecuteJob(job, null);
+                    var provPair = prov.Split('=');
+                    provider.ShortName = provPair[0];
+                    provider.FullName = provPair[1];
+                    provider.ProviderType = registry.GetExpressionProviderType(provPair[1].Trim());
                 }
-            }
-        }
-
-        public void ExecuteJob(IWhenDoJob job, IWhenDoMessage context)
-        {
-            if(job.Type == JobType.Scheduled)
-                job.SetNextRun(dtp.Now);
-            job.LastRun = dtp.Now;
-            jobRepository.SaveAsync(job);
-
-            foreach (var command in job.Commands)
-            {
-                try
-                {
-                    switch (command.ExecutionStrategy.Mode)
-                    {
-                        //case ExecutionMode.Default:
-                        //    var commandExecutor = serviceProvider.GetRequiredService<IWhenDoCommandExecutor>();
-                        //    await commandExecutor.ExecuteAsync(context, command.Type, command.MethodName, command.Parameters);
-                        //    break;
-
-                        case ExecutionMode.Default:
-                        case ExecutionMode.Reliable:
-                            hangfireClient.Enqueue<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id));
-                            logger.LogInformation($"Set command {command.Type} for immediate execution");
-                            break;
-                        case ExecutionMode.Delayed:
-                            hangfireClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id), command.ExecutionStrategy.Time);
-                            logger.LogInformation($"Delayed command {command.Type} with {command.ExecutionStrategy.Time.ToString()}");
-                            break;
-                        case ExecutionMode.Scheduled:
-                            var today = DateTimeOffset.Now.Date;
-                            var time = command.ExecutionStrategy.Time;
-                            var executionTime = (today + time > DateTime.Now) ? today + time : today.AddDays(1) + time;
-                            hangfireClient.Schedule<IWhenDoCommandExecutor>(x => x.ExecuteAsync(context, job.Id, command.Id), executionTime);
-                            logger.LogInformation($"Scheduled command {command.Type} at {time.ToString()}");
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, $"Error when executing command {command.Id}: {ex.Message}");
-                }
-            }
-        }
-
-        public bool IsRunnable(IWhenDoJob job, IWhenDoMessage message)
-        {
-            if (job.Disabled)
-                return false;
-            if (job.DisabledFrom.HasValue && job.DisabledTill.HasValue)
-            {
-                var time = dtp.CurrentTime;
-                if (time > job.DisabledFrom.Value && time < job.DisabledTill.Value)
-                    return false;
-            }
-
-            var providers = GetExpressionProviderInstances(job.ConditionProviders, message);
-
-            if (!(bool)job.Condition.DynamicInvoke(providers.ToArray()))
-                return false;
-            return true;
-        }
-
-        private List<IWhenDoExpressionProvider> GetExpressionProviderInstances(List<string> expressionProviders, IWhenDoMessage message)
-        {
-            var providers = new List<IWhenDoExpressionProvider>();
-            foreach (var cp in expressionProviders)
-            {
-                if (message != null && cp.Equals(message.GetType().Name))
-                    providers.Add(message);
                 else
                 {
-                    providers.Add(registry.GetExpressionProvider(cp));
+                    provider.FullName = prov.Trim();
+                    provider.ProviderType = registry.GetExpressionProviderType(prov.Trim());
                 }
-
+                providers.Add(provider);
             }
             return providers;
         }

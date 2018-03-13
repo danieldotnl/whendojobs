@@ -5,7 +5,7 @@
 	"disabledTill": "21:00:00",
 	"disabled": false,
 	"providers": ["msg=TemperatureMessage", "dtp=DateTime"],
-	"when": "msg.Area = \"Livingroom\" AND msg.Temperature > 15.0 AND msg.Temperature < 20.0 AND dtp.CurrentTime > \"10:00\"",
+	"when": "@msg.Area = \"Livingroom\" AND @msg.Temperature > 15.0 AND @msg.Temperature < 20.0 AND @dtp.CurrentTime > \"10:00\"",
 	"do": [{
 		"type": "Logging",
 		"command": "LogError",
@@ -28,7 +28,7 @@
 		"text": "Dit is een delayed test",
 		"execution": {
 			"mode": "delayed",
-			"time": "00:10"
+			"time": "@dtp.CurrentTime"
 		}
 	},
 	{

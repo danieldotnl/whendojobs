@@ -11,19 +11,22 @@ namespace WhenDoJobs.Core
 {
     public static class WhenDoHelpers
     {
-        public static Delegate ParseExpression<T>(string condition, Dictionary<string, Type> availableProviders)
+        public static Delegate ParseExpression<T>(string condition, List<ExpressionProviderInfo> availableProviders)
         {
-            if (string.IsNullOrEmpty(condition))
+            if (typeof(T) == typeof(bool) && string.IsNullOrEmpty(condition))
                 condition = "true";
 
-            var parameters = new List<ParameterExpression>();
-            var requiredProviders = condition.ExtractProviders();
+            else if (typeof(T) == typeof(TimeSpan) && TimeSpan.TryParse(condition, out TimeSpan result))
+                condition = $"TimeSpan.Parse(\"{condition}\")";
 
-            if(requiredProviders != null)
+            var parameters = new List<ParameterExpression>();
+            var requiredProviderShortNames = condition.ExtractProviderShortNames();
+
+            if(requiredProviderShortNames != null)
             {
-                foreach (var requiredProvider in requiredProviders)
+                foreach (var requiredProvider in requiredProviderShortNames)
                 {
-                    parameters.Add(Expression.Parameter(availableProviders[requiredProvider], requiredProvider));
+                    parameters.Add(Expression.Parameter(availableProviders.Single(x => x.ShortName == requiredProvider).ProviderType, requiredProvider));
                 }
             }
 

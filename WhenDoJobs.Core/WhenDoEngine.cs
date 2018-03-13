@@ -25,22 +25,22 @@ namespace WhenDoJobs.Core
         private WhenDoConfiguration config;
         private BackgroundJobServer hangfireServer;
         private JobStorage hangfireStorage;
+        private IWhenDoJobExecutionManager jobExecutionManager;
         private IWhenDoJobManager jobManager;
-        private IWhenDoRepository<IWhenDoJob> jobRepository;
 
-        public WhenDoEngine(IWhenDoQueueProvider queue, IServiceProvider serviceProvider, IWhenDoJobManager jobManager, IWhenDoRepository<IWhenDoJob> jobRepository,
-            ILogger<WhenDoEngine> logger, IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage)
+        public WhenDoEngine(IWhenDoQueueProvider queue, IServiceProvider serviceProvider, IWhenDoJobExecutionManager jobExecutionManager,
+            ILogger<WhenDoEngine> logger, IWhenDoRegistry registry, WhenDoConfiguration config, JobStorage hangfireStorage, IWhenDoJobManager jobManager)
         {
-            this.jobRepository = jobRepository;
             this.queue = queue;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
             this.registry = registry;
             this.config = config;
             this.hangfireStorage = hangfireStorage;
+            this.jobExecutionManager = jobExecutionManager;
             this.jobManager = jobManager;
 
-            RegisterConditionProviders();
+            RegisterExpressionProviders(); //TODO: make automatic registration configurable
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -70,9 +70,9 @@ namespace WhenDoJobs.Core
                     while (queue.GetMessage(out IWhenDoMessage message))
                     {
                         logger.LogTrace("Message received", message);
-                        await jobManager.HandleAsync(message);
+                        await jobExecutionManager.HandleAsync(message);
                     }
-                    await jobManager.HeartBeatAsync();
+                    await jobExecutionManager.HeartBeatAsync();
                     await Task.Delay(5000); //TODO: Replace by setting
                 }
                 catch(Exception ex)
@@ -87,7 +87,7 @@ namespace WhenDoJobs.Core
             }
         }
 
-        private void RegisterConditionProviders()
+        private void RegisterExpressionProviders()
         {
             var providerInterface = typeof(IWhenDoExpressionProvider);
 
@@ -111,94 +111,24 @@ namespace WhenDoJobs.Core
             }
         }
 
-        public async Task RegisterJobAsync(JobDefinition jobDefinition)
-        {
-            try
-            {
-                var job = CreateJobFromDefinition(jobDefinition);
-                await RegisterJobAsync(job);
-            }
-            catch(Exception ex)
-            {
-                logger.LogError(ex, $"Could not register job {jobDefinition.Id}");
-                throw;
-            }
-        }
-
-        public async Task RegisterJobAsync(IWhenDoJob job)
-        {
-            try
-            {
-                if(job.Schedule != null)
-                    job.SetNextRun(DateTimeOffset.Now);
-                await jobRepository.SaveAsync(job);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Could not register job {job.Id}");
-                throw;
-            }
-        }
-
-        public virtual IWhenDoJob CreateJobFromDefinition(JobDefinition definition)
-        {
-            var providers = GetProviders(definition.Providers);
-            
-            var job = new WhenDoJob()
-            {
-                Id = definition.Id,
-                Version = definition.Version,
-                Disabled = definition.Disabled,
-                DisabledFrom = definition.DisabledFrom,
-                DisabledTill = definition.DisabledTill,
-                ConditionProviders = GetProviderNames(definition.Providers),
-                Schedule =  definition.Schedule.ToWhenDoSchedule(),
-                Type = (definition.Schedule == null) ? JobType.Message : JobType.Scheduled,
-                Condition = WhenDoHelpers.ParseExpression<bool>(definition.When, providers),
-                Commands = definition.Do.Select(x => x.ToCommand()).ToList()
-            };
-            return job;
-        }        
-
-        private static List<string> GetProviderNames(List<string> providerDefs)
-        {
-            var names = new List<string>();
-            foreach (var prov in providerDefs)
-            {
-                if (prov.Contains('='))
-                    names.Add(prov.Split('=')[1]);
-                else
-                    names.Add(prov);
-            }
-            return names;
-        }
-
-        private Dictionary<string, Type> GetProviders(List<string> providerList)
-        {
-            Dictionary<string, Type> providers = new Dictionary<string, Type>();
-            foreach (var prov in providerList)
-            {
-                if (prov.Contains('='))
-                {
-                    var provPair = prov.Split('=');
-                    providers.Add(provPair[0].Trim(), registry.GetExpressionProviderType(provPair[1].Trim()));
-                }
-                else
-                {
-                    providers.Add(prov, registry.GetExpressionProviderType(prov.Trim()));
-                }
-            }
-            return providers;
-        }
-
         public void RegisterCommandHandler<T>(string type) where T : class, IWhenDoCommandHandler
         {
             registry.RegisterCommandHandler<T>(type);
         }
 
-        public async Task ClearJobsAsync()
+        public Task RegisterJobAsync(JobDefinition jobDefinition)
         {
-            await jobRepository.RemoveAllAsync();
+            return jobManager.RegisterJobAsync(jobDefinition);
+        }
+
+        public Task RegisterJobAsync(IWhenDoJob job)
+        {
+            return jobManager.RegisterJobAsync(job);
+        }        
+
+        public Task ClearJobsAsync()
+        {
+            return jobManager.ClearJobsAsync();
         }
     }
 }

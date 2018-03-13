@@ -29,12 +29,12 @@ namespace WhenDoJobsApp
 
             var file = @".\message-job.json";
             var job = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(file));
-            engine.RegisterJobAsync(job);
+            engine.RegisterJobAsync(job).Wait();
 
 
             var file2 = @".\recurring-job.json";
             var job2 = JsonConvert.DeserializeObject<JobDefinition>(File.ReadAllText(file2));
-            engine.RegisterJobAsync(job2);
+            engine.RegisterJobAsync(job2).Wait();
             
             engine.RegisterCommandHandler<LoggingCommandHandler>("Logging");
 
