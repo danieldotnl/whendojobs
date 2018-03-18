@@ -28,8 +28,9 @@ namespace WhenDoJobs.Core.Models
             return NextRun < refTime;
         }
 
-        public void SetNextRun(DateTimeOffset refDatetime)
+        public void SetNextRun(DateTimeOffset dateTime)
         {
+            var refDatetime = dateTime;
             var count = 0;
             while (true)
             {

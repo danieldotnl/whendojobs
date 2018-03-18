@@ -57,6 +57,9 @@ namespace WhenDoJobs.Core
                 else if(dayString.ToLower().Equals("weekend"))
                     days.AddRange(new[] { DayOfWeek.Saturday, DayOfWeek.Sunday });
 
+                else if(dayString.ToLower().Equals("weekday"))
+                    days.AddRange(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday });
+
                 else
                     days.Add(dayString.ToDayOfWeek());                 
             }
@@ -84,6 +87,16 @@ namespace WhenDoJobs.Core
                     providers.Add(parts[i]);
             }
             return providers.Distinct();
+        }
+
+        public static bool RequiresMessage(this Delegate del, IWhenDoMessage message)
+        {
+            foreach (var parameter in del.Method.GetParameters())
+            {
+                if (parameter.ParameterType.Name == message.GetType().Name)
+                    return true;
+            }
+            return false;
         }
 
         public static IEnumerable<string> ExtractProviderFullNames(this Delegate del)

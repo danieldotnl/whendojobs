@@ -97,7 +97,7 @@ namespace WhenDoJobs.Core.Tests
             dtpMock2.Setup(x => x.CurrentTime).Returns(new TimeSpan(15, 55, 0));
 
             var registry = new Mock<IWhenDoRegistry>();
-            registry.Setup(x => x.GetExpressionProviderInstance("DatetimeProvider")).Returns(dtpMock.As<IWhenDoExpressionProvider>().Object);
+            registry.Setup(x => x.GetExpressionProviderInstance("DateTimeProvider")).Returns(dtpMock.As<IWhenDoExpressionProvider>().Object);
             var hangfire = new Mock<IBackgroundJobClient>();
             var repository = new MemoryJobRepository();
             var manager = new WhenDoJobExecutionManager(dtpMock2.Object, registry.Object, MockHelper.CreateLogger<WhenDoJobExecutionManager>(), repository, hangfire.Object);

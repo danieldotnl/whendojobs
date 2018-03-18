@@ -45,6 +45,16 @@ namespace WhenDoJobs.Core.Tests
         }
 
         [TestMethod]
+        public void SetNextRunShouldBeTomorrow()
+        {
+            var def = new List<ScheduleDefinition>() { new ScheduleDefinition() { Days = new List<string>() { "any" }, TimesOfDay = new List<string>() { "16:00" } } };
+            var schedule = def.ToWhenDoSchedule();
+            var job = new WhenDoJob() { Schedule = schedule };
+            job.SetNextRun(DateTimeOffset.Parse("2018-03-15 19:46"));
+            Assert.AreEqual(DateTimeOffset.Parse("2018-03-16 16:00"), job.NextRun);
+        }
+
+        [TestMethod]
         public void SetNextRunWhenNoScheduledDays()
         {
             var schedule = new Dictionary<DayOfWeek, List<TimeSpan>>();

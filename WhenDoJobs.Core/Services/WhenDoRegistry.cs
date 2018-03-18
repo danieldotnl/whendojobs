@@ -44,7 +44,7 @@ namespace WhenDoJobs.Core.Services
         {
             services.AddTransient(type);
             serviceProvider = services.BuildServiceProvider();
-            expressionProviders.Add(name, type);
+            expressionProviders[name] = type;
         }
 
         public Type GetExpressionProviderType(string name)

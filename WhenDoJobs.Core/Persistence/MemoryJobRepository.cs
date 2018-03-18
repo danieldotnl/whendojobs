@@ -36,7 +36,7 @@ namespace WhenDoJobs.Core.Persistence
             return Task.CompletedTask;
         }
 
-        public Task<IEnumerable<IWhenDoJob>> Get(Expression<Func<IWhenDoJob, bool>> predicate)
+        public Task<IEnumerable<IWhenDoJob>> GetAsync(Expression<Func<IWhenDoJob, bool>> predicate)
         {
             var result = collection.Values.Where(predicate.Compile());
             return Task.FromResult(result);

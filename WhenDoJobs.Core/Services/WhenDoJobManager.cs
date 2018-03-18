@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WhenDoJobs.Core.Exceptions;
 using WhenDoJobs.Core.Interfaces;
 using WhenDoJobs.Core.Models;
 
@@ -46,7 +47,7 @@ namespace WhenDoJobs.Core.Services
             try
             {
                 if (job.Schedule != null)
-                    job.SetNextRun(DateTimeOffset.Now);
+                    job.SetNextRun(DateTimeOffset.Now); //TODO: should be provider by datetimeprovider?
                 await jobRepository.SaveAsync(job);
             }
             catch (Exception ex)
@@ -106,6 +107,7 @@ namespace WhenDoJobs.Core.Services
 
         private List<ExpressionProviderInfo> GetProviderInfoList(List<string> providerDefinitions)
         {
+            var messageCount = 0;
             var providers = new List<ExpressionProviderInfo>();
             foreach (var prov in providerDefinitions)
             {
@@ -122,8 +124,12 @@ namespace WhenDoJobs.Core.Services
                     provider.FullName = prov.Trim();
                     provider.ProviderType = registry.GetExpressionProviderType(prov.Trim());
                 }
+                if(typeof(IWhenDoMessage).IsAssignableFrom(provider.ProviderType))
+                    messageCount++;
                 providers.Add(provider);
             }
+            if (messageCount > 1)
+                throw new MoreThanOneMessageInConditionException();
             return providers;
         }
     }

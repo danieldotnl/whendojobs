@@ -32,8 +32,8 @@ namespace WhenDoJobs.Core.Services
         {
             try
             {
-                var jobs = await jobRepository.Get(x => x.Type == JobType.Message && IsRunnable(x, message));
-
+                var jobs = await jobRepository.GetAsync(x => x.Type == JobType.Message && IsRunnable(x, message));
+                
                 if (jobs.Any())
                 {
                     foreach (var job in jobs)
@@ -53,7 +53,7 @@ namespace WhenDoJobs.Core.Services
         public async Task HeartBeatAsync()
         {
             var now = dtp.Now;
-            var jobs = await jobRepository.Get(x => x.Type == JobType.Scheduled && IsRunnable(x, null) && x.ShouldRun(now));
+            var jobs = await jobRepository.GetAsync(x => x.Type == JobType.Scheduled && IsRunnable(x, null) && x.ShouldRun(now));
 
             if (jobs.Any())
             {
@@ -66,7 +66,7 @@ namespace WhenDoJobs.Core.Services
 
         public void ExecuteJob(IWhenDoJob job, IWhenDoMessage context)
         {
-            if(job.Commands.Count() == 0)
+            if (job.Commands.Count() == 0)
             {
                 logger.LogWarning("Will not execute job {id} as it does not contain any commands", job.Id);
                 return;
@@ -134,8 +134,11 @@ namespace WhenDoJobs.Core.Services
                     return false;
             }
 
+            if (message != null && !job.Condition.RequiresMessage(message))
+                return false;
+
             var providers = GetExpressionProviderInstancesForDelegate(job.Condition, message);
-            
+
             if (!(bool)job.Condition.DynamicInvoke(providers.ToArray()))
                 return false;
             return true;
@@ -151,7 +154,11 @@ namespace WhenDoJobs.Core.Services
                 if (message != null && name.Equals(message.GetType().Name))
                     providers.Add(message);
                 else
-                    providers.Add(registry.GetExpressionProviderInstance(name));
+                {
+                    var instance = registry.GetExpressionProviderInstance(name);
+                    if (instance != null)
+                        providers.Add(instance);
+                }
             }
             return providers;
         }

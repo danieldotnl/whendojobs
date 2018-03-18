@@ -106,7 +106,7 @@ namespace WhenDoJobs.Core
                         name = type.Name.Substring(0, type.Name.Length - 8);
                     else
                         name = type.Name;
-                    registry.RegisterExpressionProvider(name, type);
+                    RegisterExpressionProvider(name, type);
                 }
             }
         }
@@ -129,6 +129,11 @@ namespace WhenDoJobs.Core
         public Task ClearJobsAsync()
         {
             return jobManager.ClearJobsAsync();
+        }
+
+        public void RegisterExpressionProvider(string name, Type type)
+        {
+            registry.RegisterExpressionProvider(name, type);
         }
     }
 }

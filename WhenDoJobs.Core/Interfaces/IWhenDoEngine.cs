@@ -14,7 +14,7 @@ namespace WhenDoJobs.Core.Interfaces
         Task ClearJobsAsync();
         Task RegisterJobAsync(JobDefinition jobDefinition);
         Task RegisterJobAsync(IWhenDoJob job);
-        void RegisterCommandHandler<T>(string type)
-            where T : class, IWhenDoCommandHandler;
+        void RegisterCommandHandler<T>(string type) where T : class, IWhenDoCommandHandler;
+        void RegisterExpressionProvider(string name, Type type);
     }
 }
